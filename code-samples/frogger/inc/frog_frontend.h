@@ -2,6 +2,7 @@
 #define FROGGER_FRONTEND_H
 
 #include <string.h>
+
 #include "defines.h"
 #include "objects.h"
 

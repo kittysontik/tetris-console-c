@@ -2,6 +2,7 @@
 #define FROGGER_BACKEND_H
 
 #include <ncurses.h>
+
 #include "defines.h"
 #include "objects.h"
 #include "string.h"
