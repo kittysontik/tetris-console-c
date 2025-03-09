@@ -52,3 +52,5 @@ Mkfile.old
 dkms.conf
 
 ACTIVE_TAG_FILES.txt
+
+.DS_Store
