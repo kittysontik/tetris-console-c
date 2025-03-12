@@ -1,159 +1,147 @@
-#include "tetris.h"
+#include <ncurses.h>
 
-typedef struct win_border_struct {
-  chtype ls, rs, ts, bs, tl, tr, bl, br;  // s — side, t — top, b — bottom
-} WIN_BORDER;
-
-typedef struct WIN_struct {
-  int startx, starty;
-  int height, width;
-  WIN_BORDER border;
-} WIN;
+// #include "tetris.h"
 
 typedef struct {
-  int x[4];
-  int y[4];
+  chtype leftSide, rightSide, topSide, bottomSide, topLeftCorner,
+      topRightCorner, bottomLeftCorner, bottomRightCorner;
+} Border;
+
+typedef struct {
+  int x, y;
+  int width, height;
+  Border border;
+} GameField;
+
+typedef struct {
+  int x, y;
+} Block;
+
+typedef struct {
+  Block blocks[4];
 } Tetromino;
 
-void init_tetromino(Tetromino *t, int type) {
-  if (type == 0) {  // квадрат
-    t->x[0] = 2;
-    t->y[0] = 1;
-    t->x[1] = 3;
-    t->y[1] = 1;
-    t->x[2] = 2;
-    t->y[2] = 2;
-    t->x[3] = 3;
-    t->y[3] = 2;
-  }  // массивы координат для фигуры квадрат
+typedef enum {
+  TETROMINO_I,  // линия
+  TETROMINO_L,  // Г-образная
+  TETROMINO_J,  // обратная Г-образная
+  TETROMINO_O,  // квадрат
+  TETROMINO_S,  // s-образная
+  TETROMINO_T,  // т-образная
+  TETROMINO_Z,  // z-образная
+  TETROMINO_COUNT
+} TetrominoType;
+
+static const Tetromino tetrominoes[TETROMINO_COUNT] = {
+    {{{1, 1}, {2, 1}, {3, 1}, {4, 1}}},  // I
+    {{{1, 2}, {1, 1}, {2, 1}, {3, 1}}},  // L
+    {{{3, 2}, {3, 1}, {2, 1}, {1, 1}}},  // J
+    {{{1, 1}, {2, 1}, {2, 2}, {2, 1}}},  // O square
+    {{{1, 1}, {2, 1}, {2, 2}, {3, 2}}},  // S
+    {{{1, 1}, {2, 1}, {2, 2}, {3, 1}}},  // T
+    {{{1, 2}, {2, 2}, {2, 1}, {3, 1}}}   // Z
+};
+
+void init_tetromino(Tetromino *t, TetrominoType type) {
+  Tetromino selectedTetro = tetrominoes[type];
+
+  for (int i = 0; i < 4; i++) {
+    t->blocks[i] = selectedTetro.blocks[i];
+  }
 }
 
-void draw_tetromino(WIN *win, Tetromino *t) {
-  for (int i = 0; i < 4; i++) {
-    mvaddch(win->starty + t->y[i], win->startx + t->x[i], '#');
+void init_field(GameField *field) {
+  field->height = 22;
+  field->width = 12;
+  field->x = 1;
+  field->y = 1;
+
+  field->border.leftSide = ACS_VLINE;
+  field->border.rightSide = ACS_VLINE;
+  field->border.topSide = ACS_HLINE;
+  field->border.bottomSide = ACS_HLINE;
+
+  field->border.topLeftCorner = ACS_ULCORNER;
+  field->border.topRightCorner = ACS_URCORNER;
+  field->border.bottomLeftCorner = ACS_LLCORNER;
+  field->border.bottomRightCorner = ACS_LRCORNER;
+}
+
+void draw_corners(GameField *field) {
+  mvaddch(field->y, field->x, field->border.topLeftCorner);
+  mvaddch(field->y, (field->x + field->width - 1),
+          field->border.topRightCorner);
+  mvaddch((field->y + field->height - 1), field->x,
+          field->border.bottomLeftCorner);
+  mvaddch((field->y + field->height - 1), (field->x + field->width - 1),
+          field->border.bottomRightCorner);
+}
+
+void draw_borders(GameField *field) {
+  mvhline(field->y, field->x + 1, field->border.topSide, field->width - 2);
+  mvhline(field->y + field->height - 1, field->x + 1, field->border.bottomSide,
+          field->width - 2);
+
+  mvvline(field->y + 1, field->x, field->border.leftSide, field->height - 2);
+  mvvline(field->y + 1, field->x + field->width - 1, field->border.rightSide,
+          field->height - 2);
+}
+
+void fill_field(GameField *field) {
+  for (int j = field->y + 1; j < field->y + field->height - 1; j++) {
+    for (int i = field->x + 1; i < field->x + field->width - 1; i++) {
+      mvaddch(j, i, '.');
+    }
+  }
+}
+
+void clear_field(GameField *field) {
+  for (int j = field->y; j < field->y + field->height; j++) {
+    for (int i = field->x; i < field->x + field->width; i++) {
+      mvaddch(j, i, ' ');
+    }
+  }
+}
+
+void draw_field(GameField *field, bool draw) {
+  if (draw) {
+    draw_corners(field);
+    draw_borders(field);
+    fill_field(field);
+  } else {
+    clear_field(field);
   }
   refresh();
 }
 
-void erase_tetromino(WIN *win, Tetromino *t) {
-  for (int i = 0; i < 4; i++) {
-    mvaddch(win->starty + t->y[i], win->startx + t->x[i], '.');
-  }
-}
-void move_tetromino(WIN *win, Tetromino *t, int dx, int dy) {
-  erase_tetromino(win, t);
-
-  for (int i = 0; i < 4; i++) {
-    t->x[i] += dx;
-    t->y[i] += dy;
-  }
-  draw_tetromino(win, t);
-}
-
-void init_win_params(WIN *p_win);
-void print_win_params(WIN *p_win);
-void create_box(WIN *win, bool flag);
-
 int main(void) {
-  WIN win;
-  Tetromino tet;
+  GameField field;
   int ch;
 
-  initscr();  // allocates memory for present window which is called stdscr
+  initscr();
   start_color();
   cbreak();
-  keypad(stdscr, TRUE);  // for F1 key
+  keypad(stdscr, TRUE);
   noecho();
+  refresh();
+
   init_pair(1, COLOR_CYAN, COLOR_BLACK);
 
-  init_win_params(&win);
+  init_field(&field);
 
   attron(COLOR_PAIR(1));
   printw("Press F1 to exit. Use arrow keys to move the square");
   refresh();
+
   attroff(COLOR_PAIR(1));
+  draw_field(&field, TRUE);
+  refresh();
 
-  create_box(&win, TRUE);
-
-  init_tetromino(&tet, 0);
-  draw_tetromino(&win, &tet);
-
-  while ((ch = getch()) != KEY_F(1)) {  // Пока не нажата клавиша F1
-    if (ch == KEY_UP) {
-      move_tetromino(&win, &tet, 0, -1);  // Двигаем вверх
-    } else if (ch == KEY_DOWN) {
-      move_tetromino(&win, &tet, 0, 1);  // Двигаем вниз
-    } else if (ch == KEY_LEFT) {
-      move_tetromino(&win, &tet, -1, 0);  // Двигаем влево
-    } else if (ch == KEY_RIGHT) {
-      move_tetromino(&win, &tet, 1, 0);  // Двигаем вправо
-    }
+  while ((ch = getch()) != KEY_F(1)) {
+    draw_field(&field, TRUE);
+    refresh();
   }
 
   endwin();
   return 0;
-}
-
-void init_win_params(WIN *p_win) {
-  p_win->height = 22;
-  p_win->width = 12;
-  p_win->starty = 1;
-  p_win->startx = 1;
-
-  p_win->border.ls = ACS_VLINE;
-  p_win->border.rs = ACS_VLINE;
-  p_win->border.ts = ACS_HLINE;
-  p_win->border.bs = ACS_HLINE;
-  p_win->border.tl = ACS_ULCORNER;
-  p_win->border.tr = ACS_URCORNER;
-  p_win->border.bl = ACS_LLCORNER;
-  p_win->border.br = ACS_LRCORNER;
-}
-
-void print_win_params(WIN *p_win) {
-#ifdef _DEBUG
-  mvprintw(25, 0, "%d %d %d %d", p_win->startx, p_win->starty, p_win->width,
-           p_win->height);
-  refresh();
-#else
-  (void)p_win;
-#endif
-}
-
-void create_box(WIN *p_win, bool flag) {
-  int i, j;
-  int x, y, w, h;
-
-  x = p_win->startx;
-  y = p_win->starty;
-  w = p_win->width;
-  h = p_win->height;
-
-  if (flag == TRUE) {
-    // field corners coordinates
-    mvaddch(y, x, p_win->border.tl);
-    mvaddch(y, x + w - 1, p_win->border.tr);
-    mvaddch(y + h - 1, x, p_win->border.bl);
-    mvaddch(y + h - 1, x + w - 1, p_win->border.br);
-    // field borders coordinates
-    mvhline(y, x + 1, p_win->border.ts, w - 2);
-    mvhline(y + h - 1, x + 1, p_win->border.bs, w - 2);
-    mvvline(y + 1, x, p_win->border.ls, h - 2);
-    mvvline(y + 1, x + w - 1, p_win->border.rs, h - 2);
-
-    for (j = y + 1; j < h; j++) {
-      for (i = x + 1; i < w; i++) {
-        mvaddch(j, i, '.');
-      }
-    }
-
-  } else {
-    for (j = y; j <= y + h; ++j) {
-      for (i = x; i <= x + w; ++i) {
-        mvaddch(j, i, ' ');
-      }
-    }
-  }
-
-  refresh();
 }
