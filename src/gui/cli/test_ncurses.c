@@ -1,15 +1,16 @@
 #include <ncurses.h>
 
 // #include "tetris.h"
+#define FIELD_HEIGHT 22
+#define FIELD_WIDTH 12
 
 typedef struct {
-  chtype leftSide, rightSide, topSide, bottomSide, topLeftCorner,
-      topRightCorner, bottomLeftCorner, bottomRightCorner;
+  chtype verticLine, horizLine, topLeftCorner, topRightCorner, bottomLeftCorner,
+      bottomRightCorner;
 } Border;
 
 typedef struct {
   int x, y;
-  int width, height;
   Border border;
 } GameField;
 
@@ -51,15 +52,11 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
 }
 
 void init_field(GameField *field) {
-  field->height = 22;
-  field->width = 12;
   field->x = 1;
   field->y = 1;
 
-  field->border.leftSide = ACS_VLINE;
-  field->border.rightSide = ACS_VLINE;
-  field->border.topSide = ACS_HLINE;
-  field->border.bottomSide = ACS_HLINE;
+  field->border.verticLine = ACS_VLINE;
+  field->border.horizLine = ACS_HLINE;
 
   field->border.topLeftCorner = ACS_ULCORNER;
   field->border.topRightCorner = ACS_URCORNER;
@@ -69,35 +66,34 @@ void init_field(GameField *field) {
 
 void draw_corners(GameField *field) {
   mvaddch(field->y, field->x, field->border.topLeftCorner);
-  mvaddch(field->y, (field->x + field->width - 1),
-          field->border.topRightCorner);
-  mvaddch((field->y + field->height - 1), field->x,
+  mvaddch(field->y, (field->x + FIELD_WIDTH - 1), field->border.topRightCorner);
+  mvaddch((field->y + FIELD_HEIGHT - 1), field->x,
           field->border.bottomLeftCorner);
-  mvaddch((field->y + field->height - 1), (field->x + field->width - 1),
+  mvaddch((field->y + FIELD_HEIGHT - 1), (field->x + FIELD_WIDTH - 1),
           field->border.bottomRightCorner);
 }
 
 void draw_borders(GameField *field) {
-  mvhline(field->y, field->x + 1, field->border.topSide, field->width - 2);
-  mvhline(field->y + field->height - 1, field->x + 1, field->border.bottomSide,
-          field->width - 2);
+  mvhline(field->y, field->x + 1, field->border.horizLine, FIELD_WIDTH - 2);
+  mvhline(field->y + FIELD_HEIGHT - 1, field->x + 1, field->border.horizLine,
+          FIELD_WIDTH - 2);
 
-  mvvline(field->y + 1, field->x, field->border.leftSide, field->height - 2);
-  mvvline(field->y + 1, field->x + field->width - 1, field->border.rightSide,
-          field->height - 2);
+  mvvline(field->y + 1, field->x, field->border.verticLine, FIELD_HEIGHT - 2);
+  mvvline(field->y + 1, field->x + FIELD_WIDTH - 1, field->border.verticLine,
+          FIELD_HEIGHT - 2);
 }
 
 void fill_field(GameField *field) {
-  for (int j = field->y + 1; j < field->y + field->height - 1; j++) {
-    for (int i = field->x + 1; i < field->x + field->width - 1; i++) {
+  for (int j = field->y + 1; j < field->y + FIELD_HEIGHT - 1; j++) {
+    for (int i = field->x + 1; i < field->x + FIELD_WIDTH - 1; i++) {
       mvaddch(j, i, '.');
     }
   }
 }
 
 void clear_field(GameField *field) {
-  for (int j = field->y; j < field->y + field->height; j++) {
-    for (int i = field->x; i < field->x + field->width; i++) {
+  for (int j = field->y; j < field->y + FIELD_HEIGHT; j++) {
+    for (int i = field->x; i < field->x + FIELD_WIDTH; i++) {
       mvaddch(j, i, ' ');
     }
   }
