@@ -52,16 +52,14 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
 }
 
 void init_field(GameField *field) {
-  field->x = 1;
-  field->y = 1;
-
-  field->border.verticLine = ACS_VLINE;
-  field->border.horizLine = ACS_HLINE;
-
-  field->border.topLeftCorner = ACS_ULCORNER;
-  field->border.topRightCorner = ACS_URCORNER;
-  field->border.bottomLeftCorner = ACS_LLCORNER;
-  field->border.bottomRightCorner = ACS_LRCORNER;
+  *field = (GameField){.x = 1,
+                       .y = 1,
+                       .border = {.verticLine = ACS_VLINE,
+                                  .horizLine = ACS_HLINE,
+                                  .topLeftCorner = ACS_ULCORNER,
+                                  .topRightCorner = ACS_URCORNER,
+                                  .bottomLeftCorner = ACS_LLCORNER,
+                                  .bottomRightCorner = ACS_LRCORNER}};
 }
 
 void draw_corners(GameField *field) {
