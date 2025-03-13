@@ -5,17 +5,11 @@
 #define FIELD_WIDTH 12
 
 typedef struct {
-  chtype verticLine, horizLine, topLeftCorner, topRightCorner, bottomLeftCorner,
-      bottomRightCorner;
-} Border;
-
-typedef struct {
-  int x, y;
-  Border border;
+  int y, x;
 } GameField;
 
 typedef struct {
-  int x, y;
+  int y, x;
 } Block;
 
 typedef struct {
@@ -33,59 +27,95 @@ typedef enum {
   TETROMINO_COUNT
 } TetrominoType;
 
-static const Tetromino tetrominoes[TETROMINO_COUNT] = {
-    {{{1, 1}, {2, 1}, {3, 1}, {4, 1}}},  // I
-    {{{1, 2}, {1, 1}, {2, 1}, {3, 1}}},  // L
-    {{{3, 2}, {3, 1}, {2, 1}, {1, 1}}},  // J
-    {{{1, 1}, {2, 1}, {2, 2}, {2, 1}}},  // O square
-    {{{1, 1}, {2, 1}, {2, 2}, {3, 2}}},  // S
-    {{{1, 1}, {2, 1}, {2, 2}, {3, 1}}},  // T
-    {{{1, 2}, {2, 2}, {2, 1}, {3, 1}}}   // Z
-};
-
 void init_tetromino(Tetromino *t, TetrominoType type) {
-  Tetromino selectedTetro = tetrominoes[type];
+  if (t == NULL) return;
 
-  for (int i = 0; i < 4; i++) {
-    t->blocks[i] = selectedTetro.blocks[i];
+  switch (type) {
+    case TETROMINO_I:
+      t->blocks[0] = (Block){2, 2};
+      t->blocks[1] = (Block){2, 3};
+      t->blocks[2] = (Block){2, 4};
+      t->blocks[3] = (Block){2, 5};
+      break;
+
+    case TETROMINO_L:
+      t->blocks[0] = (Block){1, 2};
+      t->blocks[1] = (Block){1, 1};
+      t->blocks[2] = (Block){2, 1};
+      t->blocks[3] = (Block){3, 1};
+      break;
+
+    case TETROMINO_J:
+      t->blocks[0] = (Block){3, 2};
+      t->blocks[1] = (Block){3, 1};
+      t->blocks[2] = (Block){2, 1};
+      t->blocks[3] = (Block){1, 1};
+      break;
+
+    case TETROMINO_O:
+      t->blocks[0] = (Block){1, 1};
+      t->blocks[1] = (Block){1, 2};
+      t->blocks[2] = (Block){2, 2};
+      t->blocks[3] = (Block){2, 1};
+      break;
+
+    case TETROMINO_S:
+      t->blocks[0] = (Block){1, 1};
+      t->blocks[1] = (Block){2, 1};
+      t->blocks[2] = (Block){2, 2};
+      t->blocks[3] = (Block){3, 2};
+      break;
+
+    case TETROMINO_T:
+      t->blocks[0] = (Block){1, 1};
+      t->blocks[1] = (Block){2, 1};
+      t->blocks[2] = (Block){2, 2};
+      t->blocks[3] = (Block){3, 1};
+      break;
+
+    case TETROMINO_Z:
+      t->blocks[0] = (Block){1, 2};
+      t->blocks[1] = (Block){2, 2};
+      t->blocks[2] = (Block){2, 1};
+      t->blocks[3] = (Block){3, 1};
+      break;
+
+    default:
+      t->blocks[0] = (Block){1, 1};
+      t->blocks[1] = (Block){2, 1};
+      t->blocks[2] = (Block){3, 1};
+      t->blocks[3] = (Block){4, 1};
+      break;
   }
 }
 
 void init_field(GameField *field) {
-  *field = (GameField){.x = 1,
-                       .y = 1,
-                       .border = {.verticLine = ACS_VLINE,
-                                  .horizLine = ACS_HLINE,
-                                  .topLeftCorner = ACS_ULCORNER,
-                                  .topRightCorner = ACS_URCORNER,
-                                  .bottomLeftCorner = ACS_LLCORNER,
-                                  .bottomRightCorner = ACS_LRCORNER}};
+  field->x = 0;
+  field->y = 0;
 }
 
 void draw_corners(GameField *field) {
-  mvaddch(field->y, field->x, field->border.topLeftCorner);
-  mvaddch(field->y, (field->x + FIELD_WIDTH - 1), field->border.topRightCorner);
-  mvaddch((field->y + FIELD_HEIGHT - 1), field->x,
-          field->border.bottomLeftCorner);
+  mvaddch(field->y, field->x, ACS_ULCORNER);
+  mvaddch(field->y, (field->x + FIELD_WIDTH - 1), ACS_URCORNER);
+  mvaddch((field->y + FIELD_HEIGHT - 1), field->x, ACS_LLCORNER);
   mvaddch((field->y + FIELD_HEIGHT - 1), (field->x + FIELD_WIDTH - 1),
-          field->border.bottomRightCorner);
+          ACS_LRCORNER);
 }
 
+// пропускаем corners
 void draw_borders(GameField *field) {
-  mvhline(field->y, field->x + 1, field->border.horizLine, FIELD_WIDTH - 2);
-  mvhline(field->y + FIELD_HEIGHT - 1, field->x + 1, field->border.horizLine,
+  mvhline(field->y, field->x + 1, ACS_HLINE, FIELD_WIDTH - 2);
+  mvhline(field->y + FIELD_HEIGHT - 1, field->x + 1, ACS_HLINE,
           FIELD_WIDTH - 2);
 
-  mvvline(field->y + 1, field->x, field->border.verticLine, FIELD_HEIGHT - 2);
-  mvvline(field->y + 1, field->x + FIELD_WIDTH - 1, field->border.verticLine,
+  mvvline(field->y + 1, field->x, ACS_VLINE, FIELD_HEIGHT - 2);
+  mvvline(field->y + 1, field->x + FIELD_WIDTH - 1, ACS_VLINE,
           FIELD_HEIGHT - 2);
 }
 
 void fill_field(GameField *field) {
-  for (int j = field->y + 1; j < field->y + FIELD_HEIGHT - 1; j++) {
-    for (int i = field->x + 1; i < field->x + FIELD_WIDTH - 1; i++) {
-      mvaddch(j, i, '.');
-    }
+  for (int i = field->y + 1; i < field->y + FIELD_HEIGHT - 1; i++) {
+    mvhline(i, field->x + 1, '.', FIELD_WIDTH - 2);
   }
 }
 
@@ -108,9 +138,16 @@ void draw_field(GameField *field, bool draw) {
   refresh();
 }
 
+void draw_tetromino(Tetromino *t) {
+  for (int i = 0; i < 4; i++) {
+    mvprintw(t->blocks[i].x, t->blocks[i].y, "#");
+  }
+}
+
 int main(void) {
   GameField field;
   int ch;
+  Tetromino figure;
 
   initscr();
   start_color();
@@ -122,17 +159,21 @@ int main(void) {
   init_pair(1, COLOR_CYAN, COLOR_BLACK);
 
   init_field(&field);
+  init_tetromino(&figure, 0);
 
   attron(COLOR_PAIR(1));
-  printw("Press F1 to exit. Use arrow keys to move the square");
+  mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the square");
   refresh();
 
   attroff(COLOR_PAIR(1));
   draw_field(&field, TRUE);
+  draw_tetromino(&figure);
   refresh();
 
   while ((ch = getch()) != KEY_F(1)) {
     draw_field(&field, TRUE);
+    draw_tetromino(&figure);
+
     refresh();
   }
 
