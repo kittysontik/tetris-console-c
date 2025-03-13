@@ -5,11 +5,11 @@
 #define FIELD_WIDTH 12
 
 typedef struct {
-  int y, x;
+  int x, y;
 } GameField;
 
 typedef struct {
-  int y, x;
+  int x, y;
 } Block;
 
 typedef struct {
@@ -32,24 +32,24 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
 
   switch (type) {
     case TETROMINO_I:
-      t->blocks[0] = (Block){2, 2};
-      t->blocks[1] = (Block){2, 3};
-      t->blocks[2] = (Block){2, 4};
-      t->blocks[3] = (Block){2, 5};
+      t->blocks[0] = (Block){1, 1};
+      t->blocks[1] = (Block){2, 1};
+      t->blocks[2] = (Block){3, 1};
+      t->blocks[3] = (Block){4, 1};
       break;
 
     case TETROMINO_L:
-      t->blocks[0] = (Block){1, 2};
-      t->blocks[1] = (Block){1, 1};
-      t->blocks[2] = (Block){2, 1};
-      t->blocks[3] = (Block){3, 1};
+      t->blocks[0] = (Block){1, 1};
+      t->blocks[1] = (Block){1, 2};
+      t->blocks[2] = (Block){2, 2};
+      t->blocks[3] = (Block){3, 2};
       break;
 
     case TETROMINO_J:
-      t->blocks[0] = (Block){3, 2};
-      t->blocks[1] = (Block){3, 1};
-      t->blocks[2] = (Block){2, 1};
-      t->blocks[3] = (Block){1, 1};
+      t->blocks[0] = (Block){1, 2};
+      t->blocks[1] = (Block){2, 2};
+      t->blocks[2] = (Block){3, 2};
+      t->blocks[3] = (Block){3, 1};
       break;
 
     case TETROMINO_O:
@@ -60,24 +60,25 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
       break;
 
     case TETROMINO_S:
-      t->blocks[0] = (Block){1, 1};
-      t->blocks[1] = (Block){2, 1};
-      t->blocks[2] = (Block){2, 2};
-      t->blocks[3] = (Block){3, 2};
-      break;
-
-    case TETROMINO_T:
-      t->blocks[0] = (Block){1, 1};
-      t->blocks[1] = (Block){2, 1};
-      t->blocks[2] = (Block){2, 2};
-      t->blocks[3] = (Block){3, 1};
-      break;
-
-    case TETROMINO_Z:
       t->blocks[0] = (Block){1, 2};
       t->blocks[1] = (Block){2, 2};
       t->blocks[2] = (Block){2, 1};
       t->blocks[3] = (Block){3, 1};
+      break;
+
+    case TETROMINO_T:
+      t->blocks[0] = (Block){2, 1};
+      t->blocks[1] = (Block){1, 2};
+      t->blocks[2] = (Block){2, 2};
+      t->blocks[3] = (Block){3, 2};
+      break;
+
+    case TETROMINO_Z:
+
+      t->blocks[0] = (Block){1, 1};
+      t->blocks[1] = (Block){2, 1};
+      t->blocks[2] = (Block){2, 2};
+      t->blocks[3] = (Block){3, 2};
       break;
 
     default:
@@ -140,7 +141,7 @@ void draw_field(GameField *field, bool draw) {
 
 void draw_tetromino(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
-    mvprintw(t->blocks[i].x, t->blocks[i].y, "#");
+    mvprintw(t->blocks[i].y, t->blocks[i].x, "#");
   }
 }
 
@@ -159,7 +160,7 @@ int main(void) {
   init_pair(1, COLOR_CYAN, COLOR_BLACK);
 
   init_field(&field);
-  init_tetromino(&figure, 0);
+  init_tetromino(&figure, 6);
 
   attron(COLOR_PAIR(1));
   mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the square");
