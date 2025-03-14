@@ -1,11 +1,12 @@
 #include <ncurses.h>
 
 // #include "tetris.h"
-#define FIELD_HEIGHT 22
-#define FIELD_WIDTH 12
+#define FIELD_HEIGHT 20
+#define FIELD_WIDTH 10
 
 typedef struct {
   int x, y;
+  int cells[FIELD_HEIGHT][FIELD_WIDTH];
 } GameField;
 
 typedef struct {
@@ -74,7 +75,6 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
       break;
 
     case TETROMINO_Z:
-
       t->blocks[0] = (Block){1, 1};
       t->blocks[1] = (Block){2, 1};
       t->blocks[2] = (Block){2, 2};
@@ -97,34 +97,30 @@ void init_field(GameField *field) {
 
 void draw_corners(GameField *field) {
   mvaddch(field->y, field->x, ACS_ULCORNER);
-  mvaddch(field->y, (field->x + FIELD_WIDTH - 1), ACS_URCORNER);
-  mvaddch((field->y + FIELD_HEIGHT - 1), field->x, ACS_LLCORNER);
-  mvaddch((field->y + FIELD_HEIGHT - 1), (field->x + FIELD_WIDTH - 1),
+  mvaddch(field->y, (field->x + FIELD_WIDTH + 1), ACS_URCORNER);
+  mvaddch((field->y + FIELD_HEIGHT + 1), field->x, ACS_LLCORNER);
+  mvaddch((field->y + FIELD_HEIGHT + 1), (field->x + FIELD_WIDTH + 1),
           ACS_LRCORNER);
 }
 
 // пропускаем corners
 void draw_borders(GameField *field) {
-  mvhline(field->y, field->x + 1, ACS_HLINE, FIELD_WIDTH - 2);
-  mvhline(field->y + FIELD_HEIGHT - 1, field->x + 1, ACS_HLINE,
-          FIELD_WIDTH - 2);
+  mvhline(field->y, field->x + 1, ACS_HLINE, FIELD_WIDTH);
+  mvhline(field->y + FIELD_HEIGHT + 1, field->x + 1, ACS_HLINE, FIELD_WIDTH);
 
-  mvvline(field->y + 1, field->x, ACS_VLINE, FIELD_HEIGHT - 2);
-  mvvline(field->y + 1, field->x + FIELD_WIDTH - 1, ACS_VLINE,
-          FIELD_HEIGHT - 2);
+  mvvline(field->y + 1, field->x, ACS_VLINE, FIELD_HEIGHT);
+  mvvline(field->y + 1, field->x + FIELD_WIDTH + 1, ACS_VLINE, FIELD_HEIGHT);
 }
 
 void fill_field(GameField *field) {
-  for (int i = field->y + 1; i < field->y + FIELD_HEIGHT - 1; i++) {
-    mvhline(i, field->x + 1, '.', FIELD_WIDTH - 2);
+  for (int i = field->y + 1; i < field->y + FIELD_HEIGHT + 1; i++) {
+    mvhline(i, field->x + 1, '.', FIELD_WIDTH);
   }
 }
 
 void clear_field(GameField *field) {
-  for (int j = field->y; j < field->y + FIELD_HEIGHT; j++) {
-    for (int i = field->x; i < field->x + FIELD_WIDTH; i++) {
-      mvaddch(j, i, ' ');
-    }
+  for (int i = field->y + 1; i < field->y + FIELD_HEIGHT + 1; i++) {
+    mvhline(i, field->x + 1, ' ', FIELD_WIDTH);
   }
 }
 
@@ -142,6 +138,37 @@ void draw_field(GameField *field, bool draw) {
 void draw_tetromino(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
     mvprintw(t->blocks[i].y, t->blocks[i].x, "#");
+  }
+}
+
+void move_down(Tetromino *t) {
+  for (int i = 0; i < 4; i++) {
+    t->blocks[i].y += 1;
+  }
+}
+void move_right(Tetromino *t) {
+  for (int i = 0; i < 4; i++) {
+    t->blocks[i].x += 1;
+  }
+}
+void move_left(Tetromino *t) {
+  for (int i = 0; i < 4; i++) {
+    t->blocks[i].x -= 1;
+  }
+}
+bool is_bottom_side(Tetromino *t) {
+  for (int i = 0; i < 4; i++) {
+    if (t->blocks[i].y >= FIELD_HEIGHT) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+void stick_to_bottom(Tetromino *t, bool isBottomSide) {
+  if (is_bottom_side(t)) {
+    for (int i = 0; i < 4; i++) {
+    }
   }
 }
 
@@ -174,6 +201,12 @@ int main(void) {
   while ((ch = getch()) != KEY_F(1)) {
     draw_field(&field, TRUE);
     draw_tetromino(&figure);
+    if ((ch = getch()) == KEY_DOWN) {
+      move_down(&figure);
+      draw_field(&field, TRUE);
+      draw_tetromino(&figure);
+      refresh();
+    }
 
     refresh();
   }
