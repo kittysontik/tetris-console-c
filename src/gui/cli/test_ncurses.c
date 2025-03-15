@@ -1,11 +1,11 @@
 #include <ncurses.h>
+#include <stdlib.h>
 
 // #include "tetris.h"
 #define FIELD_HEIGHT 20
 #define FIELD_WIDTH 10
 
 typedef struct {
-  int x, y;
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
 } GameField;
 
@@ -91,54 +91,52 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
 }
 
 void init_field(GameField *field) {
-  field->x = 0;
-  field->y = 0;
+  for (int y = 1; y <= FIELD_HEIGHT; y++) {
+    for (int x = 1; x <= FIELD_WIDTH; x++) {
+      field->cells[y][x] = 0;
+    }
+  }
 }
 
 void draw_corners(GameField *field) {
-  mvaddch(field->y, field->x, ACS_ULCORNER);
-  mvaddch(field->y, (field->x + FIELD_WIDTH + 1), ACS_URCORNER);
-  mvaddch((field->y + FIELD_HEIGHT + 1), field->x, ACS_LLCORNER);
-  mvaddch((field->y + FIELD_HEIGHT + 1), (field->x + FIELD_WIDTH + 1),
-          ACS_LRCORNER);
+  mvaddch(0, 0, ACS_ULCORNER);
+  mvaddch(0, FIELD_WIDTH + 1, ACS_URCORNER);
+  mvaddch(FIELD_HEIGHT + 1, 0, ACS_LLCORNER);
+  mvaddch(FIELD_HEIGHT + 1, FIELD_WIDTH + 1, ACS_LRCORNER);
 }
 
 // пропускаем corners
 void draw_borders(GameField *field) {
-  mvhline(field->y, field->x + 1, ACS_HLINE, FIELD_WIDTH);
-  mvhline(field->y + FIELD_HEIGHT + 1, field->x + 1, ACS_HLINE, FIELD_WIDTH);
+  mvhline(0, 1, ACS_HLINE, FIELD_WIDTH);
+  mvhline(FIELD_HEIGHT + 1, 1, ACS_HLINE, FIELD_WIDTH);
 
-  mvvline(field->y + 1, field->x, ACS_VLINE, FIELD_HEIGHT);
-  mvvline(field->y + 1, field->x + FIELD_WIDTH + 1, ACS_VLINE, FIELD_HEIGHT);
-}
-
-void fill_field(GameField *field) {
-  for (int i = field->y + 1; i < field->y + FIELD_HEIGHT + 1; i++) {
-    mvhline(i, field->x + 1, '.', FIELD_WIDTH);
-  }
+  mvvline(1, 0, ACS_VLINE, FIELD_HEIGHT);
+  mvvline(1, FIELD_WIDTH + 1, ACS_VLINE, FIELD_HEIGHT);
 }
 
 void clear_field(GameField *field) {
-  for (int i = field->y + 1; i < field->y + FIELD_HEIGHT + 1; i++) {
-    mvhline(i, field->x + 1, ' ', FIELD_WIDTH);
+  for (int i = 1; i < FIELD_HEIGHT + 1; i++) {
+    mvhline(i, 1, ' ', FIELD_WIDTH);
   }
 }
 
-void draw_field(GameField *field, bool draw) {
-  if (draw) {
-    draw_corners(field);
-    draw_borders(field);
-    fill_field(field);
-  } else {
-    clear_field(field);
+void draw_field_borders(GameField *field) {
+  draw_corners(field);
+  draw_borders(field);
+}
+
+void draw_field(GameField *field) {
+  draw_field_borders(field);
+  for (int y = 1; y <= FIELD_HEIGHT; y++) {
+    for (int x = 1; x <= FIELD_WIDTH; x++) {
+      if (field->cells[y][x] == 1) {
+        mvprintw(y, x, "#");
+      } else {
+        mvprintw(y, x, ".");
+      }
+    }
   }
   refresh();
-}
-
-void draw_tetromino(Tetromino *t) {
-  for (int i = 0; i < 4; i++) {
-    mvprintw(t->blocks[i].y, t->blocks[i].x, "#");
-  }
 }
 
 void move_down(Tetromino *t) {
@@ -156,26 +154,46 @@ void move_left(Tetromino *t) {
     t->blocks[i].x -= 1;
   }
 }
-bool is_bottom_side(Tetromino *t) {
+
+bool is_collision_below(Tetromino *t, GameField *field) {
   for (int i = 0; i < 4; i++) {
-    if (t->blocks[i].y >= FIELD_HEIGHT) {
-      return TRUE;
+    int next_y = t->blocks[i].y + 1;
+    int x = t->blocks[i].x;
+
+    if (next_y >= FIELD_HEIGHT || field->cells[next_y][x] == 1) {
+      return true;
     }
   }
-  return FALSE;
+  return false;
 }
 
-void stick_to_bottom(Tetromino *t, bool isBottomSide) {
-  if (is_bottom_side(t)) {
-    for (int i = 0; i < 4; i++) {
-    }
+void stick_to_bottom(Tetromino *t, GameField *field) {
+  for (int i = 0; i < 4; i++) {
+    field->cells[t->blocks[i].y][t->blocks[i].x] = 1;
+  }
+}
+
+int generate_rand_tetromino() { return rand() % TETROMINO_COUNT; }
+
+void game_loop(Tetromino *t, GameField *field) {
+  if (!is_collision_below(t, field)) {
+    move_down(t);
+  } else {
+    stick_to_bottom(t, field);
+    init_tetromino(t, generate_rand_tetromino());
+  }
+}
+
+void draw_tetromino(Tetromino *t) {
+  for (int i = 0; i < 4; i++) {
+    mvprintw(t->blocks[i].y, t->blocks[i].x, "#");
   }
 }
 
 int main(void) {
   GameField field;
   int ch;
-  Tetromino figure;
+  Tetromino t;
 
   initscr();
   start_color();
@@ -184,28 +202,25 @@ int main(void) {
   noecho();
   refresh();
 
-  init_pair(1, COLOR_CYAN, COLOR_BLACK);
-
   init_field(&field);
-  init_tetromino(&figure, 6);
-
-  attron(COLOR_PAIR(1));
+  init_tetromino(&t, generate_rand_tetromino());
+  draw_tetromino(&t);
   mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the square");
-  refresh();
 
-  attroff(COLOR_PAIR(1));
-  draw_field(&field, TRUE);
-  draw_tetromino(&figure);
-  refresh();
+  draw_field(&field);
 
   while ((ch = getch()) != KEY_F(1)) {
-    draw_field(&field, TRUE);
-    draw_tetromino(&figure);
-    if ((ch = getch()) == KEY_DOWN) {
-      move_down(&figure);
-      draw_field(&field, TRUE);
-      draw_tetromino(&figure);
-      refresh();
+    mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the square");
+    init_tetromino(&t, generate_rand_tetromino());
+    draw_field(&field);
+    draw_tetromino(&t);
+
+    if (ch == KEY_DOWN) {
+      move_down(&t);
+    }
+    if (is_collision_below(&t, &field)) {
+      stick_to_bottom(&t, &field);
+      init_tetromino(&t, generate_rand_tetromino());
     }
 
     refresh();
