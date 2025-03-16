@@ -1,4 +1,4 @@
-#include <ncurses.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -27,7 +27,4 @@ typedef struct {
 // void userInput(UserAction_t action, bool hold);
 
 // GameInfo_t updateCurrentState();
-void alloc_memory_field(GameInfo_t *gameInfo);
-void print_field(GameInfo_t *gameInfo);
-
 
