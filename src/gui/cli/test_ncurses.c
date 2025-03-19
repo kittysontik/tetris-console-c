@@ -4,8 +4,8 @@
 #include <unistd.h>
 
 // #include "tetris.h"
-#define FIELD_HEIGHT 20
-#define FIELD_WIDTH 10
+#define FIELD_HEIGHT 22
+#define FIELD_WIDTH 12
 
 typedef struct {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
@@ -93,44 +93,37 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
 }
 
 void init_field(GameField *field) {
-  for (int y = 1; y <= FIELD_HEIGHT; y++) {
-    for (int x = 1; x <= FIELD_WIDTH; x++) {
+  for (int y = 0; y < FIELD_HEIGHT; y++) {
+    for (int x = 0; x < FIELD_WIDTH; x++) {
       field->cells[y][x] = 0;
     }
   }
 }
 
-void draw_corners(GameField *field) {
+void draw_corners() {
   mvaddch(0, 0, ACS_ULCORNER);
-  mvaddch(0, FIELD_WIDTH + 1, ACS_URCORNER);
-  mvaddch(FIELD_HEIGHT + 1, 0, ACS_LLCORNER);
-  mvaddch(FIELD_HEIGHT + 1, FIELD_WIDTH + 1, ACS_LRCORNER);
+  mvaddch(0, FIELD_WIDTH - 1, ACS_URCORNER);
+  mvaddch(FIELD_HEIGHT - 1, 0, ACS_LLCORNER);
+  mvaddch(FIELD_HEIGHT - 1, FIELD_WIDTH - 1, ACS_LRCORNER);
 }
 
 // пропускаем corners
-void draw_borders(GameField *field) {
-  mvhline(0, 1, ACS_HLINE, FIELD_WIDTH);
-  mvhline(FIELD_HEIGHT + 1, 1, ACS_HLINE, FIELD_WIDTH);
+void draw_borders() {
+  mvhline(0, 1, ACS_HLINE, FIELD_WIDTH - 2);
+  mvhline(FIELD_HEIGHT - 1, 1, ACS_HLINE, FIELD_WIDTH - 2);
 
-  mvvline(1, 0, ACS_VLINE, FIELD_HEIGHT);
-  mvvline(1, FIELD_WIDTH + 1, ACS_VLINE, FIELD_HEIGHT);
+  mvvline(1, 0, ACS_VLINE, FIELD_HEIGHT - 2);
+  mvvline(1, FIELD_WIDTH - 1, ACS_VLINE, FIELD_HEIGHT - 2);
 }
 
-void clear_field(GameField *field) {
-  for (int i = 1; i < FIELD_HEIGHT + 1; i++) {
-    mvhline(i, 1, ' ', FIELD_WIDTH);
-  }
-}
-
-void draw_field_borders(GameField *field) {
-  draw_corners(field);
-  draw_borders(field);
+void draw_field_borders() {
+  draw_corners();
+  draw_borders();
 }
 
 void draw_field(GameField *field) {
-  draw_field_borders(field);
-  for (int y = 1; y <= FIELD_HEIGHT; y++) {
-    for (int x = 1; x <= FIELD_WIDTH; x++) {
+  for (int y = 1; y < FIELD_HEIGHT - 1; y++) {
+    for (int x = 1; x < FIELD_WIDTH - 1; x++) {
       if (field->cells[y][x] == 1) {
         mvprintw(y, x, "#");
       } else {
@@ -184,15 +177,6 @@ int generate_rand_tetromino() {
   return result;
 }
 
-void game_loop(Tetromino *t, GameField *field) {
-  if (!is_collision_below(t, field)) {
-    move_down(t);
-  } else {
-    stick_to_bottom(t, field);
-    init_tetromino(t, generate_rand_tetromino());
-  }
-}
-
 void draw_tetromino(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
     mvprintw(t->blocks[i].y, t->blocks[i].x, "#");
@@ -210,52 +194,50 @@ int main(void) {
   cbreak();
   keypad(stdscr, TRUE);
   noecho();
-  timeout(0);
   curs_set(0);
 
   init_field(&field);
   init_tetromino(&t, generate_rand_tetromino());
+  draw_field_borders();
+
+  draw_field(&field);
+
   draw_tetromino(&t);
   mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the square");
-  draw_field(&field);
+
   refresh();
+  ch = getch();
 
-  while (running) {
-    ch = getch();
+  // while (running) {
+  //   ch = getch();
 
-    switch (ch) {
-      case 'q':
-        running = false;
-        break;
+  //   switch (ch) {
+  //     case 'q':
+  //       running = false;
+  //       break;
 
-      case KEY_DOWN:
-        move_down(&t);
-        if (is_collision_below(&t, &field)) {
-          stick_to_bottom(&t, &field);
-          init_tetromino(&t, generate_rand_tetromino());
-        }
-        mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the square");
-        draw_field(&field);
-        draw_tetromino(&t);
-        break;
+  //     case KEY_DOWN:
+  //       move_down(&t);
+  //       if (is_collision_below(&t, &field)) {
+  //         stick_to_bottom(&t, &field);
+  //         init_tetromino(&t, generate_rand_tetromino());
+  //       }
+  //       mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the
+  //       square"); draw_field(&field); draw_tetromino(&t); break;
 
-      case KEY_RIGHT:
-        move_right(&t);
-        mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the square");
-        draw_field(&field);
-        draw_tetromino(&t);
-        break;
+  //     case KEY_RIGHT:
+  //       move_right(&t);
+  //       mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the
+  //       square"); draw_field(&field); draw_tetromino(&t); break;
 
-      case KEY_LEFT:
-        move_left(&t);
-        mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the square");
-        draw_field(&field);
-        draw_tetromino(&t);
-        break;
-    }
+  //     case KEY_LEFT:
+  //       move_left(&t);
+  //       mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the
+  //       square"); draw_field(&field); draw_tetromino(&t); break;
+  //   }
 
-    refresh();
-  }
+  //   refresh();
+  // }
   endwin();
   return 0;
 }
