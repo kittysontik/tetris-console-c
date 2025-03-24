@@ -37,59 +37,59 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
 
   switch (type) {
     case TETROMINO_I:
-      t->blocks[0] = (Block){1, 1};
-      t->blocks[1] = (Block){2, 1};
-      t->blocks[2] = (Block){3, 1};
-      t->blocks[3] = (Block){4, 1};
+      t->blocks[0] = (Block){0, 0};
+      t->blocks[1] = (Block){1, 0};
+      t->blocks[2] = (Block){2, 0};
+      t->blocks[3] = (Block){3, 0};
       break;
 
     case TETROMINO_L:
-      t->blocks[0] = (Block){1, 1};
-      t->blocks[1] = (Block){1, 2};
-      t->blocks[2] = (Block){2, 2};
-      t->blocks[3] = (Block){3, 2};
-      break;
-
-    case TETROMINO_J:
-      t->blocks[0] = (Block){1, 2};
-      t->blocks[1] = (Block){2, 2};
-      t->blocks[2] = (Block){3, 2};
-      t->blocks[3] = (Block){3, 1};
-      break;
-
-    case TETROMINO_O:
-      t->blocks[0] = (Block){1, 1};
-      t->blocks[1] = (Block){1, 2};
-      t->blocks[2] = (Block){2, 2};
+      t->blocks[0] = (Block){0, 0};
+      t->blocks[1] = (Block){0, 1};
+      t->blocks[2] = (Block){1, 1};
       t->blocks[3] = (Block){2, 1};
       break;
 
-    case TETROMINO_S:
-      t->blocks[0] = (Block){1, 2};
-      t->blocks[1] = (Block){2, 2};
+    case TETROMINO_J:
+      t->blocks[0] = (Block){0, 1};
+      t->blocks[1] = (Block){1, 1};
       t->blocks[2] = (Block){2, 1};
-      t->blocks[3] = (Block){3, 1};
+      t->blocks[3] = (Block){2, 0};
+      break;
+
+    case TETROMINO_O:
+      t->blocks[0] = (Block){0, 0};
+      t->blocks[1] = (Block){0, 1};
+      t->blocks[2] = (Block){1, 1};
+      t->blocks[3] = (Block){1, 0};
+      break;
+
+    case TETROMINO_S:
+      t->blocks[0] = (Block){0, 1};
+      t->blocks[1] = (Block){1, 1};
+      t->blocks[2] = (Block){1, 0};
+      t->blocks[3] = (Block){2, 0};
       break;
 
     case TETROMINO_T:
-      t->blocks[0] = (Block){2, 1};
-      t->blocks[1] = (Block){1, 2};
-      t->blocks[2] = (Block){2, 2};
-      t->blocks[3] = (Block){3, 2};
+      t->blocks[0] = (Block){1, 0};
+      t->blocks[1] = (Block){0, 1};
+      t->blocks[2] = (Block){1, 1};
+      t->blocks[3] = (Block){2, 1};
       break;
 
     case TETROMINO_Z:
-      t->blocks[0] = (Block){1, 1};
-      t->blocks[1] = (Block){2, 1};
-      t->blocks[2] = (Block){2, 2};
-      t->blocks[3] = (Block){3, 2};
+      t->blocks[0] = (Block){0, 0};
+      t->blocks[1] = (Block){1, 0};
+      t->blocks[2] = (Block){1, 1};
+      t->blocks[3] = (Block){2, 1};
       break;
 
     default:
-      t->blocks[0] = (Block){1, 1};
-      t->blocks[1] = (Block){2, 1};
-      t->blocks[2] = (Block){3, 1};
-      t->blocks[3] = (Block){4, 1};
+      t->blocks[0] = (Block){0, 0};
+      t->blocks[1] = (Block){1, 0};
+      t->blocks[2] = (Block){2, 0};
+      t->blocks[3] = (Block){3, 0};
       break;
   }
 }
@@ -107,9 +107,9 @@ void draw_field(GameField *field, WINDOW *win) {
   for (int y = 0; y < FIELD_HEIGHT; y++) {
     for (int x = 0; x < FIELD_WIDTH; x++) {
       if (field->cells[y][x] == 1) {
-        mvwprintw(win, y + 1, x + 1, "#");
+        mvwprintw(win, y, x, "#");
       } else {
-        mvwprintw(win, y + 1, x + 1, ".");
+        mvwprintw(win, y, x, ".");
       }
     }
   }
@@ -126,7 +126,7 @@ void move_down(Tetromino *t, WINDOW *game_win) {
 
 void move_right(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
-    if (t->blocks[i].x < FIELD_WIDTH - 1) {
+    if (t->blocks[i].x < FIELD_WIDTH - 2) {
       t->blocks[i].x += 1;
     }
   }
@@ -174,7 +174,7 @@ int generate_rand_tetromino() {
 void draw_tetromino(Tetromino *t, WINDOW *win) {
   wattron(win, COLOR_PAIR(2));
   for (int i = 0; i < 4; i++) {
-    mvwprintw(win, t->blocks[i].y + 1, t->blocks[i].x + 1, "#");
+    mvwprintw(win, t->blocks[i].y, t->blocks[i].x, "#");
   }
   wattroff(win, COLOR_PAIR(2));
 }
@@ -191,12 +191,15 @@ int main(void) {
   int off_set_x = 0, off_set_y = 0;
   off_set_y = ((getmaxy(stdscr) - WIN_HEIGHT) / 2);
   off_set_x = (getmaxx(stdscr) - WIN_WIDTH) / 2;
-  WINDOW *game_win = newwin(WIN_HEIGHT, WIN_WIDTH, off_set_y, off_set_x);
+  WINDOW *borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, off_set_y, off_set_x);
+  WINDOW *game_win =
+      newwin(FIELD_HEIGHT, FIELD_WIDTH, off_set_y + 1, off_set_x + 1);
 
   start_color();
   cbreak();
   keypad(stdscr, TRUE);
   keypad(game_win, TRUE);
+  keypad(borders_win, TRUE);
   noecho();
   curs_set(0);
 
@@ -211,9 +214,12 @@ int main(void) {
   init_field(&field);
   init_tetromino(&t, generate_rand_tetromino());
 
-  draw_box(game_win);
+  draw_box(borders_win);
   draw_field(&field, game_win);
   draw_tetromino(&t, game_win);
+
+  wrefresh(borders_win);
+  wrefresh(game_win);
 
   while (running) {
     ch = wgetch(game_win);
@@ -244,9 +250,10 @@ int main(void) {
         break;
     }
     werase(game_win);
-    draw_box(game_win);
+    draw_box(borders_win);
     draw_field(&field, game_win);
     draw_tetromino(&t, game_win);
+    wrefresh(borders_win);
     wrefresh(game_win);
   }
 
