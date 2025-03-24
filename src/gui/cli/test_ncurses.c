@@ -4,8 +4,10 @@
 #include <unistd.h>
 
 // #include "tetris.h"
-#define FIELD_HEIGHT 22
-#define FIELD_WIDTH 12
+#define FIELD_HEIGHT 20
+#define FIELD_WIDTH 10
+#define WIN_HEIGHT 22
+#define WIN_WIDTH 12
 
 typedef struct {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
@@ -100,52 +102,40 @@ void init_field(GameField *field) {
   }
 }
 
-void draw_corners() {
-  mvaddch(0, 0, ACS_ULCORNER);
-  mvaddch(0, FIELD_WIDTH - 1, ACS_URCORNER);
-  mvaddch(FIELD_HEIGHT - 1, 0, ACS_LLCORNER);
-  mvaddch(FIELD_HEIGHT - 1, FIELD_WIDTH - 1, ACS_LRCORNER);
-}
-
-// пропускаем corners
-void draw_borders() {
-  mvhline(0, 1, ACS_HLINE, FIELD_WIDTH - 2);
-  mvhline(FIELD_HEIGHT - 1, 1, ACS_HLINE, FIELD_WIDTH - 2);
-
-  mvvline(1, 0, ACS_VLINE, FIELD_HEIGHT - 2);
-  mvvline(1, FIELD_WIDTH - 1, ACS_VLINE, FIELD_HEIGHT - 2);
-}
-
-void draw_field_borders() {
-  draw_corners();
-  draw_borders();
-}
-
-void draw_field(GameField *field) {
-  for (int y = 1; y < FIELD_HEIGHT - 1; y++) {
-    for (int x = 1; x < FIELD_WIDTH - 1; x++) {
+void draw_field(GameField *field, WINDOW *win) {
+  wattron(win, COLOR_PAIR(1));
+  for (int y = 0; y < FIELD_HEIGHT; y++) {
+    for (int x = 0; x < FIELD_WIDTH; x++) {
       if (field->cells[y][x] == 1) {
-        mvprintw(y, x, "#");
+        mvwprintw(win, y + 1, x + 1, "#");
       } else {
-        mvprintw(y, x, ".");
+        mvwprintw(win, y + 1, x + 1, ".");
       }
+    }
+  }
+  wattroff(win, COLOR_PAIR(1));
+}
+
+void move_down(Tetromino *t, WINDOW *game_win) {
+  for (int i = 0; i < 4; i++) {
+    if (t->blocks[i].y < FIELD_HEIGHT) {
+      t->blocks[i].y += 1;
     }
   }
 }
 
-void move_down(Tetromino *t) {
-  for (int i = 0; i < 4; i++) {
-    if (t->blocks[i].y <= FIELD_HEIGHT) t->blocks[i].y += 1;
-  }
-}
 void move_right(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
-    t->blocks[i].x += 1;
+    if (t->blocks[i].x < FIELD_WIDTH - 1) {
+      t->blocks[i].x += 1;
+    }
   }
 }
 void move_left(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
-    t->blocks[i].x -= 1;
+    if (t->blocks[i].x > 0) {
+      t->blocks[i].x -= 1;
+    }
   }
 }
 
@@ -161,10 +151,14 @@ bool is_collision_below(Tetromino *t, GameField *field) {
   return false;
 }
 
-void stick_to_bottom(Tetromino *t, GameField *field) {
+void stick_to_bottom(Tetromino *t, GameField *field, WINDOW *game_win) {
   for (int i = 0; i < 4; i++) {
-    if (t->blocks[i].y <= FIELD_HEIGHT && t->blocks[i].x <= FIELD_WIDTH)
-      field->cells[t->blocks[i].y][t->blocks[i].x] = 1;
+    int y = t->blocks[i].y;
+    int x = t->blocks[i].x;
+
+    if (y >= 0 && y <= FIELD_HEIGHT && x >= 0 && x <= FIELD_WIDTH) {
+      field->cells[y][x] = 1;
+    }
   }
 }
 
@@ -177,67 +171,85 @@ int generate_rand_tetromino() {
   return result;
 }
 
-void draw_tetromino(Tetromino *t) {
+void draw_tetromino(Tetromino *t, WINDOW *win) {
+  wattron(win, COLOR_PAIR(2));
   for (int i = 0; i < 4; i++) {
-    mvprintw(t->blocks[i].y, t->blocks[i].x, "#");
+    mvwprintw(win, t->blocks[i].y + 1, t->blocks[i].x + 1, "#");
   }
+  wattroff(win, COLOR_PAIR(2));
+}
+
+void draw_box(WINDOW *win) {
+  wattron(win, COLOR_PAIR(1));
+  box(win, 0, 0);
+  wattroff(win, COLOR_PAIR(1));
 }
 
 int main(void) {
+  initscr();
+
+  int off_set_x = 0, off_set_y = 0;
+  off_set_y = ((getmaxy(stdscr) - WIN_HEIGHT) / 2);
+  off_set_x = (getmaxx(stdscr) - WIN_WIDTH) / 2;
+  WINDOW *game_win = newwin(WIN_HEIGHT, WIN_WIDTH, off_set_y, off_set_x);
+
+  start_color();
+  cbreak();
+  keypad(stdscr, TRUE);
+  keypad(game_win, TRUE);
+  noecho();
+  curs_set(0);
+
+  init_pair(1, COLOR_MAGENTA, COLOR_BLACK);
+  init_pair(2, COLOR_GREEN, COLOR_BLACK);
+
   GameField field;
   int ch;
   Tetromino t;
   bool running = true;
 
-  initscr();
-  start_color();
-  cbreak();
-  keypad(stdscr, TRUE);
-  noecho();
-  curs_set(0);
-
   init_field(&field);
   init_tetromino(&t, generate_rand_tetromino());
-  draw_field_borders();
 
-  draw_field(&field);
+  draw_box(game_win);
+  draw_field(&field, game_win);
+  draw_tetromino(&t, game_win);
 
-  draw_tetromino(&t);
-  mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the square");
+  while (running) {
+    ch = wgetch(game_win);
 
-  refresh();
-  ch = getch();
+    switch (ch) {
+      case 'q':
+        running = false;
+        break;
 
-  // while (running) {
-  //   ch = getch();
+      case KEY_DOWN:
+        move_down(&t, game_win);
+        if (is_collision_below(&t, &field)) {
+          stick_to_bottom(&t, &field, game_win);
 
-  //   switch (ch) {
-  //     case 'q':
-  //       running = false;
-  //       break;
+          init_tetromino(&t, generate_rand_tetromino());
+        }
 
-  //     case KEY_DOWN:
-  //       move_down(&t);
-  //       if (is_collision_below(&t, &field)) {
-  //         stick_to_bottom(&t, &field);
-  //         init_tetromino(&t, generate_rand_tetromino());
-  //       }
-  //       mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the
-  //       square"); draw_field(&field); draw_tetromino(&t); break;
+        break;
 
-  //     case KEY_RIGHT:
-  //       move_right(&t);
-  //       mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the
-  //       square"); draw_field(&field); draw_tetromino(&t); break;
+      case KEY_RIGHT:
+        move_right(&t);
 
-  //     case KEY_LEFT:
-  //       move_left(&t);
-  //       mvprintw(1, 15, "Press F1 to exit. Use arrow keys to move the
-  //       square"); draw_field(&field); draw_tetromino(&t); break;
-  //   }
+        break;
 
-  //   refresh();
-  // }
+      case KEY_LEFT:
+        move_left(&t);
+
+        break;
+    }
+    werase(game_win);
+    draw_box(game_win);
+    draw_field(&field, game_win);
+    draw_tetromino(&t, game_win);
+    wrefresh(game_win);
+  }
+
   endwin();
   return 0;
 }
