@@ -219,6 +219,7 @@ int main(void) {
   keypad(stdscr, TRUE);
   keypad(game_win, TRUE);
   keypad(borders_win, TRUE);
+  nodelay(game_win, TRUE);  // Не блокируем getch()
   noecho();
   curs_set(0);
 
@@ -241,7 +242,17 @@ int main(void) {
   wrefresh(game_win);
 
   while (running) {
+    move_down(&t, game_win);
+    if (is_collision_below(&t, &field)) {
+      stick_to_bottom(&t, &field, game_win);
+      init_tetromino(&t, generate_rand_tetromino());
+    }
+
+    printf("start wgetch\n");
     ch = wgetch(game_win);
+    printf("end wgetch\n");
+    sleep(1);
+    printf("end sleep\n");
 
     switch (ch) {
       case 'q':
@@ -252,20 +263,16 @@ int main(void) {
         move_down(&t, game_win);
         if (is_collision_below(&t, &field)) {
           stick_to_bottom(&t, &field, game_win);
-
           init_tetromino(&t, generate_rand_tetromino());
         }
-
         break;
 
       case KEY_RIGHT:
         move_right(&t);
-
         break;
 
       case KEY_LEFT:
         move_left(&t);
-
         break;
     }
     werase(game_win);
