@@ -124,16 +124,35 @@ void move_down(Tetromino *t, WINDOW *game_win) {
   }
 }
 
-void move_right(Tetromino *t) {
+bool is_right_side(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
-    if (t->blocks[i].x < FIELD_WIDTH - 2) {
+    if (t->blocks[i].x >= FIELD_WIDTH - 1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool is_left_side(Tetromino *t) {
+  for (int i = 0; i < 4; i++) {
+    if (t->blocks[i].x <= 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void move_right(Tetromino *t) {
+  if (!is_right_side(t)) {
+    for (int i = 0; i < 4; i++) {
       t->blocks[i].x += 1;
     }
   }
 }
+
 void move_left(Tetromino *t) {
-  for (int i = 0; i < 4; i++) {
-    if (t->blocks[i].x > 0) {
+  if (!is_left_side(t)) {
+    for (int i = 0; i < 4; i++) {
       t->blocks[i].x -= 1;
     }
   }
