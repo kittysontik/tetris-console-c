@@ -8,6 +8,7 @@
 #define FIELD_WIDTH 10
 #define WIN_HEIGHT 22
 #define WIN_WIDTH 12
+#define FALL_DELAY 500000
 
 typedef struct {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
@@ -241,18 +242,25 @@ int main(void) {
   wrefresh(borders_win);
   wrefresh(game_win);
 
+  struct timespec last_fall, current_time;
+  clock_gettime(CLOCK_MONOTONIC, &last_fall);
+
   while (running) {
-    move_down(&t, game_win);
-    if (is_collision_below(&t, &field)) {
-      stick_to_bottom(&t, &field, game_win);
-      init_tetromino(&t, generate_rand_tetromino());
+    clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время
+
+    long elapsed_time = (current_time.tv_sec - last_fall.tv_sec) * 1000000L +
+                        (current_time.tv_nsec - last_fall.tv_nsec) / 1000L;
+
+    if (elapsed_time >= FALL_DELAY) {
+      move_down(&t, game_win);
+      if (is_collision_below(&t, &field)) {
+        stick_to_bottom(&t, &field, game_win);
+        init_tetromino(&t, generate_rand_tetromino());
+      }
+      clock_gettime(CLOCK_MONOTONIC, &last_fall);
     }
 
-    printf("start wgetch\n");
     ch = wgetch(game_win);
-    printf("end wgetch\n");
-    sleep(1);
-    printf("end sleep\n");
 
     switch (ch) {
       case 'q':
@@ -265,6 +273,7 @@ int main(void) {
           stick_to_bottom(&t, &field, game_win);
           init_tetromino(&t, generate_rand_tetromino());
         }
+        clock_gettime(CLOCK_MONOTONIC, &last_fall);
         break;
 
       case KEY_RIGHT:
@@ -276,11 +285,17 @@ int main(void) {
         break;
     }
     werase(game_win);
+
     draw_box(borders_win);
     draw_field(&field, game_win);
     draw_tetromino(&t, game_win);
-    wrefresh(borders_win);
-    wrefresh(game_win);
+
+    wnoutrefresh(borders_win);
+    wnoutrefresh(game_win);
+
+    doupdate();
+
+    usleep(10000);
   }
 
   endwin();
