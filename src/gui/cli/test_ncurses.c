@@ -8,7 +8,8 @@
 #define FIELD_WIDTH 10
 #define WIN_HEIGHT 22
 #define WIN_WIDTH 12
-#define FALL_DELAY 500000
+
+#define FALL_DELAY 0.5  // задержка в 0.5 секунды
 
 typedef struct {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
@@ -205,6 +206,13 @@ void draw_box(WINDOW *win) {
   wattroff(win, COLOR_PAIR(1));
 }
 
+// 1 нс = 10 в -9 степени сек.
+// перевод наносекунд в секунды
+double get_elapsed_time(struct timespec *start, struct timespec *end) {
+  return ((end->tv_sec - start->tv_sec) +
+          (end->tv_nsec - start->tv_nsec) / 1e9);
+}
+
 int main(void) {
   initscr();
 
@@ -243,13 +251,14 @@ int main(void) {
   wrefresh(game_win);
 
   struct timespec last_fall, current_time;
-  clock_gettime(CLOCK_MONOTONIC, &last_fall);
+
+  clock_gettime(CLOCK_MONOTONIC, &last_fall);  // Фиксируем время
 
   while (running) {
     clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время
 
-    long elapsed_time = (current_time.tv_sec - last_fall.tv_sec) * 1000000L +
-                        (current_time.tv_nsec - last_fall.tv_nsec) / 1000L;
+    // Считаем, сколько времени прошло с последнего зафиксированного момента
+    double elapsed_time = get_elapsed_time(&last_fall, &current_time);
 
     if (elapsed_time >= FALL_DELAY) {
       move_down(&t, game_win);
@@ -290,9 +299,11 @@ int main(void) {
     draw_field(&field, game_win);
     draw_tetromino(&t, game_win);
 
+    // Подготавливаем окна для перерисовки
     wnoutrefresh(borders_win);
     wnoutrefresh(game_win);
 
+    // Обновляем все окна
     doupdate();
 
     usleep(10000);
