@@ -41,19 +41,19 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
   t->type = type;
 
   const int shapes[7][4][2] = {
+      {{-2, 0}, {-1, 0}, {0, 0}, {1, 0}},  // TETROMINO_I
+
       {{-1, 0}, {-1, 1}, {0, 1}, {1, 1}},  // TETROMINO_L
 
       {{1, 0}, {-1, 1}, {0, 1}, {1, 1}},  // TETROMINO_J
 
       {{-1, 0}, {0, 0}, {-1, 1}, {0, 1}},  // TETROMINO_O
 
-      {{-1, 1}, {0, 1}, {-2, 0}, {-1, 0}},  // TETROMINO_Z
+      {{-1, 1}, {0, 1}, {0, 0}, {1, 0}},  // TETROMINO_S
 
       {{-1, 0}, {-2, 1}, {-1, 1}, {0, 1}},  // TETROMINO_T
 
-      {{-1, 1}, {0, 1}, {0, 0}, {1, 0}},  // TETROMINO_S
-
-      {{-2, 0}, {-1, 0}, {0, 0}, {1, 0}}  // TETROMINO_I
+      {{-1, 1}, {0, 1}, {-2, 0}, {-1, 0}},  // TETROMINO_Z
   };
 
   for (int i = 0; i < 4; i++) {
