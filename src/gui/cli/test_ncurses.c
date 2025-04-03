@@ -19,10 +19,6 @@ typedef struct {
   int x, y;
 } Block;
 
-typedef struct {
-  Block blocks[4];
-} Tetromino;
-
 typedef enum {
   TETROMINO_I,  // линия
   TETROMINO_L,  // Г-образная
@@ -34,67 +30,35 @@ typedef enum {
   TETROMINO_COUNT
 } TetrominoType;
 
+typedef struct {
+  Block blocks[4];
+  TetrominoType type;
+} Tetromino;
+
 void init_tetromino(Tetromino *t, TetrominoType type) {
   if (t == NULL) return;
-  int center_x = FIELD_WIDTH / 2 - 2;
+  int center_x = FIELD_WIDTH / 2;
+  t->type = type;
 
-  switch (type) {
-    case TETROMINO_I:
-      t->blocks[0] = (Block){center_x, 0};
-      t->blocks[1] = (Block){center_x + 1, 0};
-      t->blocks[2] = (Block){center_x + 2, 0};
-      t->blocks[3] = (Block){center_x + 3, 0};
+  const int shapes[7][4][2] = {
+      {{-1, 0}, {-1, 1}, {0, 1}, {1, 1}},  // TETROMINO_L
 
-      break;
+      {{1, 0}, {-1, 1}, {0, 1}, {1, 1}},  // TETROMINO_J
 
-    case TETROMINO_L:
-      t->blocks[0] = (Block){0, 0};
-      t->blocks[1] = (Block){0, 1};
-      t->blocks[2] = (Block){1, 1};
-      t->blocks[3] = (Block){2, 1};
-      break;
+      {{-1, 0}, {0, 0}, {-1, 1}, {0, 1}},  // TETROMINO_O
 
-    case TETROMINO_J:
-      t->blocks[0] = (Block){0, 1};
-      t->blocks[1] = (Block){1, 1};
-      t->blocks[2] = (Block){2, 1};
-      t->blocks[3] = (Block){2, 0};
-      break;
+      {{-1, 1}, {0, 1}, {-2, 0}, {-1, 0}},  // TETROMINO_Z
 
-    case TETROMINO_O:
-      t->blocks[0] = (Block){0, 0};
-      t->blocks[1] = (Block){0, 1};
-      t->blocks[2] = (Block){1, 1};
-      t->blocks[3] = (Block){1, 0};
-      break;
+      {{-1, 0}, {-2, 1}, {-1, 1}, {0, 1}},  // TETROMINO_T
 
-    case TETROMINO_S:
-      t->blocks[0] = (Block){0, 1};
-      t->blocks[1] = (Block){1, 1};
-      t->blocks[2] = (Block){1, 0};
-      t->blocks[3] = (Block){2, 0};
-      break;
+      {{-1, 1}, {0, 1}, {0, 0}, {1, 0}},  // TETROMINO_S
 
-    case TETROMINO_T:
-      t->blocks[0] = (Block){1, 0};
-      t->blocks[1] = (Block){0, 1};
-      t->blocks[2] = (Block){1, 1};
-      t->blocks[3] = (Block){2, 1};
-      break;
+      {{-2, 0}, {-1, 0}, {0, 0}, {1, 0}}  // TETROMINO_I
+  };
 
-    case TETROMINO_Z:
-      t->blocks[0] = (Block){0, 0};
-      t->blocks[1] = (Block){1, 0};
-      t->blocks[2] = (Block){1, 1};
-      t->blocks[3] = (Block){2, 1};
-      break;
-
-    default:
-      t->blocks[0] = (Block){0, 0};
-      t->blocks[1] = (Block){1, 0};
-      t->blocks[2] = (Block){2, 0};
-      t->blocks[3] = (Block){3, 0};
-      break;
+  for (int i = 0; i < 4; i++) {
+    t->blocks[i].x = center_x + shapes[type][i][0];
+    t->blocks[i].y = shapes[type][i][1];
   }
 }
 
@@ -126,6 +90,14 @@ void move_down(Tetromino *t, WINDOW *game_win) {
       t->blocks[i].y += 1;
     }
   }
+}
+
+bool is_out_of_borders(int x, int y) {
+  return (x < 0 || x >= FIELD_WIDTH || y >= FIELD_HEIGHT);
+}
+
+bool is_cell_occupied(GameField *field, int x, int y) {
+  return (y >= 0 && field->cells[y][x] == 1);
 }
 
 bool is_right_border(Tetromino *t) {
@@ -167,7 +139,7 @@ bool is_collision_below(Tetromino *t, GameField *field) {
     int next_y = t->blocks[i].y + 1;
     int x = t->blocks[i].x;
 
-    if (next_y == FIELD_HEIGHT || field->cells[next_y][x] == 1) {
+    if (is_out_of_borders(x, next_y) || is_cell_occupied(field, x, next_y)) {
       return true;
     }
   }
@@ -179,18 +151,46 @@ bool is_collision_on_sides(Tetromino *t, GameField *field, int direction) {
     int next_x = t->blocks[i].x + direction;
     int y = t->blocks[i].y;
 
-    if (next_x < 0 || next_x >= FIELD_WIDTH) {
-      return true;
-    }
-
-    if (y >= 0 && field->cells[y][next_x] == 1) {
+    if (is_out_of_borders(next_x, y) || is_cell_occupied(field, next_x, y)) {
       return true;
     }
   }
   return false;
 }
 
-// void rotate_tetromino(Tetromino *t, GameField *field, int direction)
+bool can_rotate(Tetromino *rotated, GameField *field) {
+  for (int i = 0; i < 4; i++) {
+    int x = rotated->blocks[i].x;
+    int y = rotated->blocks[i].y;
+
+    if (is_out_of_borders(x, y) || is_cell_occupied(field, x, y)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void rotate_tetromino(Tetromino *t, GameField *field, TetrominoType type) {
+  if (type == TETROMINO_O) {
+    return;  // Квадрат не вращается
+  }
+  Tetromino rotated = *t;
+  Block center = t->blocks[0];
+
+  for (int i = 1; i < 4; i++) {
+    int x = t->blocks[i].x - center.x;
+    int y = t->blocks[i].y - center.y;
+
+    rotated.blocks[i].x = center.x - y;
+    rotated.blocks[i].y = center.y + x;
+  }
+
+  if (!can_rotate(&rotated, field)) {
+    return;
+  }
+
+  *t = rotated;
+}
 
 void stick_to_bottom(Tetromino *t, GameField *field, WINDOW *game_win) {
   for (int i = 0; i < 4; i++) {
@@ -311,6 +311,10 @@ int main(void) {
 
       case KEY_LEFT:
         move_left(&t);
+        break;
+
+      case KEY_UP:
+        rotate_tetromino(&t, &field, t.type);
         break;
     }
     werase(game_win);
