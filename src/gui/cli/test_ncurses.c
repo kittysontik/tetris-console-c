@@ -36,13 +36,15 @@ typedef enum {
 
 void init_tetromino(Tetromino *t, TetrominoType type) {
   if (t == NULL) return;
+  int center_x = FIELD_WIDTH / 2 - 2;
 
   switch (type) {
     case TETROMINO_I:
-      t->blocks[0] = (Block){0, 0};
-      t->blocks[1] = (Block){1, 0};
-      t->blocks[2] = (Block){2, 0};
-      t->blocks[3] = (Block){3, 0};
+      t->blocks[0] = (Block){center_x, 0};
+      t->blocks[1] = (Block){center_x + 1, 0};
+      t->blocks[2] = (Block){center_x + 2, 0};
+      t->blocks[3] = (Block){center_x + 3, 0};
+
       break;
 
     case TETROMINO_L:
@@ -126,7 +128,7 @@ void move_down(Tetromino *t, WINDOW *game_win) {
   }
 }
 
-bool is_right_side(Tetromino *t) {
+bool is_right_border(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
     if (t->blocks[i].x >= FIELD_WIDTH - 1) {
       return true;
@@ -135,7 +137,7 @@ bool is_right_side(Tetromino *t) {
   return false;
 }
 
-bool is_left_side(Tetromino *t) {
+bool is_left_border(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
     if (t->blocks[i].x <= 0) {
       return true;
@@ -145,7 +147,7 @@ bool is_left_side(Tetromino *t) {
 }
 
 void move_right(Tetromino *t) {
-  if (!is_right_side(t)) {
+  if (!is_right_border(t)) {
     for (int i = 0; i < 4; i++) {
       t->blocks[i].x += 1;
     }
@@ -153,7 +155,7 @@ void move_right(Tetromino *t) {
 }
 
 void move_left(Tetromino *t) {
-  if (!is_left_side(t)) {
+  if (!is_left_border(t)) {
     for (int i = 0; i < 4; i++) {
       t->blocks[i].x -= 1;
     }
@@ -171,6 +173,24 @@ bool is_collision_below(Tetromino *t, GameField *field) {
   }
   return false;
 }
+
+bool is_collision_on_sides(Tetromino *t, GameField *field, int direction) {
+  for (int i = 0; i < 4; i++) {
+    int next_x = t->blocks[i].x + direction;
+    int y = t->blocks[i].y;
+
+    if (next_x < 0 || next_x >= FIELD_WIDTH) {
+      return true;
+    }
+
+    if (y >= 0 && field->cells[y][next_x] == 1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// void rotate_tetromino(Tetromino *t, GameField *field, int direction)
 
 void stick_to_bottom(Tetromino *t, GameField *field, WINDOW *game_win) {
   for (int i = 0; i < 4; i++) {
@@ -305,8 +325,6 @@ int main(void) {
 
     // Обновляем все окна
     doupdate();
-
-    usleep(10000);
   }
 
   endwin();
