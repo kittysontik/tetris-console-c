@@ -1,40 +1,4 @@
-#include <ncurses.h>
-#include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
-
-// #include "tetris.h"
-#define FIELD_HEIGHT 20
-#define FIELD_WIDTH 10
-#define WIN_HEIGHT 22
-#define WIN_WIDTH 12
-
-#define FALL_DELAY 0.5          // задержка в 0.5 секунды
-#define SHIFT_DELAY 5 * 100000  // задержка в 0.5 секунды в микросекундах
-
-typedef struct {
-  int cells[FIELD_HEIGHT][FIELD_WIDTH];
-} GameField;
-
-typedef struct {
-  int x, y;
-} Block;
-
-typedef enum {
-  TETROMINO_I,  // линия
-  TETROMINO_L,  // Г-образная
-  TETROMINO_J,  // обратная Г-образная
-  TETROMINO_O,  // квадрат
-  TETROMINO_S,  // s-образная
-  TETROMINO_T,  // т-образная
-  TETROMINO_Z,  // z-образная
-  TETROMINO_COUNT
-} TetrominoType;
-
-typedef struct {
-  Block blocks[4];
-  TetrominoType type;
-} Tetromino;
+#include "../../tetris.h"
 
 void init_tetromino(Tetromino *t, TetrominoType type) {
   if (t == NULL) return;
@@ -69,20 +33,6 @@ void init_field(GameField *field) {
       field->cells[y][x] = 0;
     }
   }
-}
-
-void draw_field(GameField *field, WINDOW *win) {
-  wattron(win, COLOR_PAIR(1));
-  for (int y = 0; y < FIELD_HEIGHT; y++) {
-    for (int x = 0; x < FIELD_WIDTH; x++) {
-      if (field->cells[y][x] == 1) {
-        mvwprintw(win, y, x, "#");
-      } else {
-        mvwprintw(win, y, x, ".");
-      }
-    }
-  }
-  wattroff(win, COLOR_PAIR(1));
 }
 
 void move_down(Tetromino *t, WINDOW *game_win) {
@@ -208,20 +158,6 @@ int generate_rand_tetromino() {
     result = rand() % TETROMINO_COUNT;
   }
   return result;
-}
-
-void draw_tetromino(Tetromino *t, WINDOW *win) {
-  wattron(win, COLOR_PAIR(2));
-  for (int i = 0; i < 4; i++) {
-    mvwprintw(win, t->blocks[i].y, t->blocks[i].x, "#");
-  }
-  wattroff(win, COLOR_PAIR(2));
-}
-
-void draw_box(WINDOW *win) {
-  wattron(win, COLOR_PAIR(1));
-  box(win, 0, 0);
-  wattroff(win, COLOR_PAIR(1));
 }
 
 void game_over(WINDOW *game_win) {
@@ -375,16 +311,7 @@ int main(void) {
 
     werase(game_win);
 
-    draw_box(borders_win);
-    draw_field(&field, game_win);
-    draw_tetromino(&t, game_win);
-
-    // Подготавливаем окна для перерисовки
-    wnoutrefresh(borders_win);
-    wnoutrefresh(game_win);
-
-    // Обновляем все окна
-    doupdate();
+    render_all(borders_win, game_win, &field, &t);
   }
 
   endwin();
