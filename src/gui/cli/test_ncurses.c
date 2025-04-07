@@ -9,7 +9,8 @@
 #define WIN_HEIGHT 22
 #define WIN_WIDTH 12
 
-#define FALL_DELAY 0.5  // задержка в 0.5 секунды
+#define FALL_DELAY 0.5          // задержка в 0.5 секунды
+#define SHIFT_DELAY 5 * 100000  // задержка в 0.5 секунды в микросекундах
 
 typedef struct {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
@@ -100,46 +101,11 @@ bool is_cell_occupied(GameField *field, int x, int y) {
   return (y >= 0 && field->cells[y][x] == 1);
 }
 
-bool is_right_border(Tetromino *t) {
+bool is_game_over(Tetromino *t, GameField *field) {
   for (int i = 0; i < 4; i++) {
-    if (t->blocks[i].x >= FIELD_WIDTH - 1) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool is_left_border(Tetromino *t) {
-  for (int i = 0; i < 4; i++) {
-    if (t->blocks[i].x <= 0) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void move_right(Tetromino *t) {
-  if (!is_right_border(t)) {
-    for (int i = 0; i < 4; i++) {
-      t->blocks[i].x += 1;
-    }
-  }
-}
-
-void move_left(Tetromino *t) {
-  if (!is_left_border(t)) {
-    for (int i = 0; i < 4; i++) {
-      t->blocks[i].x -= 1;
-    }
-  }
-}
-
-bool is_collision_below(Tetromino *t, GameField *field) {
-  for (int i = 0; i < 4; i++) {
-    int next_y = t->blocks[i].y + 1;
     int x = t->blocks[i].x;
-
-    if (is_out_of_borders(x, next_y) || is_cell_occupied(field, x, next_y)) {
+    int y = t->blocks[i].y;
+    if (is_cell_occupied(field, x, y)) {
       return true;
     }
   }
@@ -152,6 +118,34 @@ bool is_collision_on_sides(Tetromino *t, GameField *field, int direction) {
     int y = t->blocks[i].y;
 
     if (is_out_of_borders(next_x, y) || is_cell_occupied(field, next_x, y)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void move_right(Tetromino *t, GameField *field, int direction) {
+  if (!is_collision_on_sides(t, field, direction)) {
+    for (int i = 0; i < 4; i++) {
+      t->blocks[i].x += 1;
+    }
+  }
+}
+
+void move_left(Tetromino *t, GameField *field, int direction) {
+  if (!is_collision_on_sides(t, field, direction)) {
+    for (int i = 0; i < 4; i++) {
+      t->blocks[i].x -= 1;
+    }
+  }
+}
+
+bool is_collision_below(Tetromino *t, GameField *field) {
+  for (int i = 0; i < 4; i++) {
+    int next_y = t->blocks[i].y + 1;
+    int x = t->blocks[i].x;
+
+    if (is_out_of_borders(x, next_y) || is_cell_occupied(field, x, next_y)) {
       return true;
     }
   }
@@ -171,6 +165,10 @@ bool can_rotate(Tetromino *rotated, GameField *field) {
 }
 
 void rotate_tetromino(Tetromino *t, GameField *field, TetrominoType type) {
+  // if (!t || !field) {
+  //   return;
+  // }
+
   if (type == TETROMINO_O) {
     return;  // Квадрат не вращается
   }
@@ -192,7 +190,7 @@ void rotate_tetromino(Tetromino *t, GameField *field, TetrominoType type) {
   *t = rotated;
 }
 
-void stick_to_bottom(Tetromino *t, GameField *field, WINDOW *game_win) {
+void stick_to_bottom(Tetromino *t, GameField *field) {
   for (int i = 0; i < 4; i++) {
     int y = t->blocks[i].y;
     int x = t->blocks[i].x;
@@ -226,11 +224,53 @@ void draw_box(WINDOW *win) {
   wattroff(win, COLOR_PAIR(1));
 }
 
+void game_over(WINDOW *game_win) {
+  wclear(game_win);
+  mvwprintw(game_win, FIELD_HEIGHT / 2, FIELD_WIDTH / 2, "Game Over!");
+  wrefresh(game_win);
+
+  wgetch(game_win);
+}
+
 // 1 нс = 10 в -9 степени сек.
 // перевод наносекунд в секунды
 double get_elapsed_time(struct timespec *start, struct timespec *end) {
   return ((end->tv_sec - start->tv_sec) +
           (end->tv_nsec - start->tv_nsec) / 1e9);
+}
+
+bool is_full_row(GameField *field, int row) {
+  for (int j = 0; j < FIELD_WIDTH; j++) {
+    if (field->cells[row][j] == 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool has_full_rows(GameField *field) {
+  for (int i = 0; i < FIELD_HEIGHT; i++) {
+    if (is_full_row(field, i)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void shift_rows(GameField *field, WINDOW *game_win) {
+  for (int row = 0; row < FIELD_HEIGHT; row++) {
+    if (is_full_row(field, row)) {
+      for (int k = row; k > 0; k--) {            // rows
+        for (int j = 0; j < FIELD_WIDTH; j++) {  // columns
+          field->cells[k][j] = field->cells[k - 1][j];
+        }
+      }
+      for (int j = 0; j < FIELD_WIDTH; j++) {
+        field->cells[0][j] = 0;  // обнуляем самую верхнюю строку
+      }
+      row--;
+    }
+  }
 }
 
 int main(void) {
@@ -283,7 +323,16 @@ int main(void) {
     if (elapsed_time >= FALL_DELAY) {
       move_down(&t, game_win);
       if (is_collision_below(&t, &field)) {
-        stick_to_bottom(&t, &field, game_win);
+        stick_to_bottom(&t, &field);
+        if (has_full_rows(&field)) {
+          draw_field(&field, game_win);
+          // Подготавливаем окна для перерисовки
+          wnoutrefresh(game_win);
+          // Обновляем все окна
+          doupdate();
+          usleep(SHIFT_DELAY);
+          shift_rows(&field, game_win);
+        }
         init_tetromino(&t, generate_rand_tetromino());
       }
       clock_gettime(CLOCK_MONOTONIC, &last_fall);
@@ -299,24 +348,31 @@ int main(void) {
       case KEY_DOWN:
         move_down(&t, game_win);
         if (is_collision_below(&t, &field)) {
-          stick_to_bottom(&t, &field, game_win);
+          stick_to_bottom(&t, &field);
           init_tetromino(&t, generate_rand_tetromino());
         }
         clock_gettime(CLOCK_MONOTONIC, &last_fall);
         break;
 
       case KEY_RIGHT:
-        move_right(&t);
+        move_right(&t, &field, 1);
         break;
 
       case KEY_LEFT:
-        move_left(&t);
+        move_left(&t, &field, -1);
         break;
 
       case KEY_UP:
         rotate_tetromino(&t, &field, t.type);
         break;
     }
+
+    if (is_game_over(&t, &field)) {
+      game_over(game_win);
+      sleep(5);
+      running = false;
+    }
+
     werase(game_win);
 
     draw_box(borders_win);
