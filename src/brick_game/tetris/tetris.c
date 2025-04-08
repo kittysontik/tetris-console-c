@@ -12,23 +12,18 @@ int main(void) {
   init_ncurses(game_win, borders_win);
   init_colors();
 
-  GameField field;
   int ch;
-  Tetromino tetromino;
-  Tetromino next_tetromino;
-  GameInfo_t game_info;
+
+  GameInfo_t game_info = init_game_info();
   bool running = true;
 
-  init_field(&field);
-  init_tetromino(&tetromino, generate_rand_tetromino());
-  // init_tetromino(&next_tetromino, generate_rand_tetromino());
-
-  render_all(borders_win, game_win, next_win, &field, &tetromino);
+  render_all(borders_win, game_win, next_win, &game_info.field,
+             &game_info.tetromino);
 
   struct timespec last_fall, current_time;
   clock_gettime(CLOCK_MONOTONIC, &last_fall);  // Фиксируем время
 
-  game_loop(field, ch, tetromino, running, last_fall, current_time, borders_win,
+  game_loop(&game_info, ch, running, last_fall, current_time, borders_win,
             game_win, next_win);
 
   endwin();

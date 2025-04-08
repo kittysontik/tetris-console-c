@@ -54,10 +54,10 @@ GameInfo_t init_game_info() {
   return game_info;
 }
 
-void move_down(Tetromino *t) {
+void move_down(GameInfo_t *game_info) {
   for (int i = 0; i < 4; i++) {
-    if (t->blocks[i].y < FIELD_HEIGHT) {
-      t->blocks[i].y += 1;
+    if (game_info->tetromino.blocks[i].y < FIELD_HEIGHT) {
+      game_info->tetromino.blocks[i].y += 1;
     }
   }
 }
@@ -66,106 +66,104 @@ bool is_out_of_borders(int x, int y) {
   return (x < 0 || x >= FIELD_WIDTH || y >= FIELD_HEIGHT);
 }
 
-bool is_cell_occupied(GameField *field, int x, int y) {
-  return (y >= 0 && field->cells[y][x] == 1);
+bool is_cell_occupied(GameInfo_t *game_info, int x, int y) {
+  return (y >= 0 && game_info->field.cells[y][x] == 1);
 }
 
-bool is_game_over(Tetromino *t, GameField *field) {
+bool is_game_over(GameInfo_t *game_info) {
   for (int i = 0; i < 4; i++) {
-    int x = t->blocks[i].x;
-    int y = t->blocks[i].y;
-    if (is_cell_occupied(field, x, y)) {
+    int x = game_info->tetromino.blocks[i].x;
+    int y = game_info->tetromino.blocks[i].y;
+    if (is_cell_occupied(game_info, x, y)) {
       return true;
     }
   }
   return false;
 }
 
-bool is_collision_on_sides(Tetromino *t, GameField *field, int direction) {
+bool is_collision_on_sides(GameInfo_t *game_info, int direction) {
   for (int i = 0; i < 4; i++) {
-    int next_x = t->blocks[i].x + direction;
-    int y = t->blocks[i].y;
+    int next_x = game_info->tetromino.blocks[i].x + direction;
+    int y = game_info->tetromino.blocks[i].y;
 
-    if (is_out_of_borders(next_x, y) || is_cell_occupied(field, next_x, y)) {
+    if (is_out_of_borders(next_x, y) ||
+        is_cell_occupied(game_info, next_x, y)) {
       return true;
     }
   }
   return false;
 }
 
-void move_right(Tetromino *t, GameField *field, int direction) {
-  if (!is_collision_on_sides(t, field, direction)) {
+void move_right(GameInfo_t *game_info, int direction) {
+  if (!is_collision_on_sides(game_info, direction)) {
     for (int i = 0; i < 4; i++) {
-      t->blocks[i].x += 1;
+      game_info->tetromino.blocks[i].x += 1;
     }
   }
 }
 
-void move_left(Tetromino *t, GameField *field, int direction) {
-  if (!is_collision_on_sides(t, field, direction)) {
+void move_left(GameInfo_t *game_info, int direction) {
+  if (!is_collision_on_sides(game_info, direction)) {
     for (int i = 0; i < 4; i++) {
-      t->blocks[i].x -= 1;
+      game_info->tetromino.blocks[i].x -= 1;
     }
   }
 }
 
-bool is_collision_below(Tetromino *t, GameField *field) {
+bool is_collision_below(GameInfo_t *game_info) {
   for (int i = 0; i < 4; i++) {
-    int next_y = t->blocks[i].y + 1;
-    int x = t->blocks[i].x;
+    int next_y = game_info->tetromino.blocks[i].y + 1;
+    int x = game_info->tetromino.blocks[i].x;
 
-    if (is_out_of_borders(x, next_y) || is_cell_occupied(field, x, next_y)) {
+    if (is_out_of_borders(x, next_y) ||
+        is_cell_occupied(game_info, x, next_y)) {
       return true;
     }
   }
   return false;
 }
 
-bool can_rotate(Tetromino *t, GameField *field) {
+bool can_rotate(GameInfo_t *game_info) {
   for (int i = 0; i < 4; i++) {
-    int x = t->blocks[i].x;
-    int y = t->blocks[i].y;
+    int x = game_info->tetromino.blocks[i].x;
+    int y = game_info->tetromino.blocks[i].y;
 
-    if (is_out_of_borders(x, y) || is_cell_occupied(field, x, y)) {
+    if (is_out_of_borders(x, y) || is_cell_occupied(game_info, x, y)) {
       return false;
     }
   }
   return true;
 }
 
-void rotate_tetromino(Tetromino *t, GameField *field, TetrominoType type) {
-  if (!t || !field) {
-    return;
-  }
-
-  if (type == TETROMINO_O) {
+void rotate_tetromino(GameInfo_t *game_info) {
+  if (game_info->tetromino.type == TETROMINO_O) {
     return;  // Квадрат не вращается
   }
-  Tetromino rotated = *t;
-  Block center = t->blocks[0];
+  Tetromino rotated = game_info->tetromino;
+  Block center = rotated.blocks[0];
 
   for (int i = 1; i < 4; i++) {
-    int x = t->blocks[i].x - center.x;
-    int y = t->blocks[i].y - center.y;
+    int x = game_info->tetromino.blocks[i].x - center.x;
+    int y = game_info->tetromino.blocks[i].y - center.y;
 
     rotated.blocks[i].x = center.x - y;
     rotated.blocks[i].y = center.y + x;
   }
 
-  if (!can_rotate(&rotated, field)) {
+  if (!can_rotate(game_info)) {
     return;
   }
 
-  *t = rotated;
+  game_info->tetromino = rotated;
 }
 
-void stick_to_bottom(Tetromino *t, GameField *field) {
+void stick_to_bottom(GameInfo_t *game_info) {
   for (int i = 0; i < 4; i++) {
-    int y = t->blocks[i].y;
-    int x = t->blocks[i].x;
+    int y = game_info->tetromino.blocks[i].y;
+    int x = game_info->tetromino.blocks[i].x;
 
     if (y >= 0 && y <= FIELD_HEIGHT && x >= 0 && x <= FIELD_WIDTH) {
-      field->cells[y][x] = 1;
+      game_info->field.cells[y][x] = 1;
     }
   }
 }
@@ -204,23 +202,23 @@ bool has_full_rows(GameField *field) {
   return false;
 }
 
-void shift_rows(GameField *field) {
+void shift_rows(GameInfo_t *game_info) {
   for (int row = 0; row < FIELD_HEIGHT; row++) {
-    if (is_full_row(field, row)) {
+    if (is_full_row(&game_info->field, row)) {
       for (int k = row; k > 0; k--) {            // rows
         for (int j = 0; j < FIELD_WIDTH; j++) {  // columns
-          field->cells[k][j] = field->cells[k - 1][j];
+          game_info->field.cells[k][j] = game_info->field.cells[k - 1][j];
         }
       }
       for (int j = 0; j < FIELD_WIDTH; j++) {
-        field->cells[0][j] = 0;  // обнуляем самую верхнюю строку
+        game_info->field.cells[0][j] = 0;  // обнуляем самую верхнюю строку
       }
       row--;
     }
   }
 }
 
-void game_loop(GameField field, int ch, Tetromino t, bool running,
+void game_loop(GameInfo_t *game_info, int ch, bool running,
                struct timespec last_fall, struct timespec current_time,
                WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win) {
   while (running) {
@@ -230,16 +228,17 @@ void game_loop(GameField field, int ch, Tetromino t, bool running,
     double elapsed_time = get_elapsed_time(&last_fall, &current_time);
 
     if (elapsed_time >= FALL_DELAY) {
-      move_down(&t);
-      if (is_collision_below(&t, &field)) {
-        stick_to_bottom(&t, &field);
-        if (has_full_rows(&field)) {
-          render_all(borders_win, game_win, next_win, &field, &t);
+      move_down(game_info);
+      if (is_collision_below(game_info)) {
+        stick_to_bottom(game_info);
+        if (has_full_rows(&game_info->field)) {
+          render_all(borders_win, game_win, next_win, &game_info->field,
+                     &game_info->tetromino);
 
           usleep(SHIFT_DELAY);
-          shift_rows(&field);
+          shift_rows(game_info);
         }
-        init_tetromino(&t, generate_rand_tetromino());
+        game_info->tetromino = init_tetromino();
       }
       clock_gettime(CLOCK_MONOTONIC, &last_fall);
     }
@@ -252,39 +251,41 @@ void game_loop(GameField field, int ch, Tetromino t, bool running,
         break;
 
       case KEY_DOWN:
-        move_down(&t);
-        if (is_collision_below(&t, &field)) {
-          stick_to_bottom(&t, &field);
-          if (has_full_rows(&field)) {
-            render_all(borders_win, game_win, next_win, &field, &t);
+        move_down(game_info);
+        if (is_collision_below(game_info)) {
+          stick_to_bottom(game_info);
+          if (has_full_rows(&game_info->field)) {
+            render_all(borders_win, game_win, next_win, &game_info->field,
+                       &game_info->tetromino);
 
             usleep(SHIFT_DELAY);
-            shift_rows(&field);
+            shift_rows(game_info);
           }
-          init_tetromino(&t, generate_rand_tetromino());
+          game_info->tetromino = init_tetromino();
         }
         clock_gettime(CLOCK_MONOTONIC, &last_fall);
         break;
 
       case KEY_RIGHT:
-        move_right(&t, &field, 1);
+        move_right(game_info, 1);
         break;
 
       case KEY_LEFT:
-        move_left(&t, &field, -1);
+        move_left(game_info, -1);
         break;
 
       case KEY_UP:
-        rotate_tetromino(&t, &field, t.type);
+        rotate_tetromino(game_info);
         break;
     }
 
-    if (is_game_over(&t, &field)) {
+    if (is_game_over(game_info)) {
       render_game_over(game_win);
       sleep(5);
       running = false;
     }
 
-    render_all(borders_win, game_win, next_win, &field, &t);
+    render_all(borders_win, game_win, next_win, &game_info->field,
+               &game_info->tetromino);
   }
 }

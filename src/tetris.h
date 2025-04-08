@@ -64,20 +64,20 @@ Tetromino init_tetromino();
 GameField init_field();
 GameInfo_t init_game_info();
 
-void move_down(Tetromino *t);
-void move_right(Tetromino *t, GameField *field, int direction);
-void move_left(Tetromino *t, GameField *field, int direction);
+void move_down(GameInfo_t *game_info);
+void move_right(GameInfo_t *game_info, int direction);
+void move_left(GameInfo_t *game_info, int direction);
 
 bool is_out_of_borders(int x, int y);
-bool is_cell_occupied(GameField *field, int x, int y);
-bool is_game_over(Tetromino *t, GameField *field);
-bool is_collision_on_sides(Tetromino *t, GameField *field, int direction);
-bool is_collision_below(Tetromino *t, GameField *field);
+bool is_cell_occupied(GameInfo_t *game_info, int x, int y);
+bool is_game_over(GameInfo_t *game_info);
+bool is_collision_on_sides(GameInfo_t *game_info, int direction);
+bool is_collision_below(GameInfo_t *game_info);
 
-bool can_rotate(Tetromino *t, GameField *field);
-void rotate_tetromino(Tetromino *t, GameField *field, TetrominoType type);
+bool can_rotate(GameInfo_t *game_info);
+void rotate_tetromino(GameInfo_t *game_info);
 
-void stick_to_bottom(Tetromino *t, GameField *field);
+void stick_to_bottom(GameInfo_t *game_info);
 
 int generate_rand_tetromino();
 
@@ -85,9 +85,9 @@ double get_elapsed_time(struct timespec *start, struct timespec *end);
 
 bool is_full_row(GameField *field, int row);
 bool has_full_rows(GameField *field);
-void shift_rows(GameField *field);
+void shift_rows(GameInfo_t *game_info);
 
 // main loop of game
-void game_loop(GameField field, int ch, Tetromino t, bool running,
+void game_loop(GameInfo_t *game_info, int ch, bool running,
                struct timespec last_fall, struct timespec current_time,
                WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win);
