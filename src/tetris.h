@@ -74,7 +74,7 @@ bool is_game_over(GameInfo_t *game_info);
 bool is_collision_on_sides(GameInfo_t *game_info, int direction);
 bool is_collision_below(GameInfo_t *game_info);
 
-bool can_rotate(GameInfo_t *game_info);
+bool can_rotate(GameInfo_t *game_info, Tetromino *rotated);
 void rotate_tetromino(GameInfo_t *game_info);
 
 void stick_to_bottom(GameInfo_t *game_info);

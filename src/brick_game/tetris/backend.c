@@ -123,10 +123,10 @@ bool is_collision_below(GameInfo_t *game_info) {
   return false;
 }
 
-bool can_rotate(GameInfo_t *game_info) {
+bool can_rotate(GameInfo_t *game_info, Tetromino *rotated) {
   for (int i = 0; i < 4; i++) {
-    int x = game_info->tetromino.blocks[i].x;
-    int y = game_info->tetromino.blocks[i].y;
+    int x = rotated->blocks[i].x;
+    int y = rotated->blocks[i].y;
 
     if (is_out_of_borders(x, y) || is_cell_occupied(game_info, x, y)) {
       return false;
@@ -150,7 +150,7 @@ void rotate_tetromino(GameInfo_t *game_info) {
     rotated.blocks[i].y = center.y + x;
   }
 
-  if (!can_rotate(game_info)) {
+  if (!can_rotate(game_info, &rotated)) {
     return;
   }
 
