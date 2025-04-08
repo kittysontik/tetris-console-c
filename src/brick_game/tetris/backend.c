@@ -200,3 +200,72 @@ void shift_rows(GameField *field, WINDOW *game_win) {
     }
   }
 }
+
+void game_loop(GameField field, int ch, Tetromino t, bool running,
+               struct timespec last_fall, struct timespec current_time,
+               WINDOW *borders_win, WINDOW *game_win) {
+  while (running) {
+    clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время
+
+    // Считаем, сколько времени прошло с последнего зафиксированного момента
+    double elapsed_time = get_elapsed_time(&last_fall, &current_time);
+
+    if (elapsed_time >= FALL_DELAY) {
+      move_down(&t, game_win);
+      if (is_collision_below(&t, &field)) {
+        stick_to_bottom(&t, &field);
+        if (has_full_rows(&field)) {
+          render_all(borders_win, game_win, &field, &t);
+
+          usleep(SHIFT_DELAY);
+          shift_rows(&field, game_win);
+        }
+        init_tetromino(&t, generate_rand_tetromino());
+      }
+      clock_gettime(CLOCK_MONOTONIC, &last_fall);
+    }
+
+    ch = wgetch(game_win);
+
+    switch (ch) {
+      case 'q':
+        running = false;
+        break;
+
+      case KEY_DOWN:
+        move_down(&t, game_win);
+        if (is_collision_below(&t, &field)) {
+          stick_to_bottom(&t, &field);
+          if (has_full_rows(&field)) {
+            render_all(borders_win, game_win, &field, &t);
+
+            usleep(SHIFT_DELAY);
+            shift_rows(&field, game_win);
+          }
+          init_tetromino(&t, generate_rand_tetromino());
+        }
+        clock_gettime(CLOCK_MONOTONIC, &last_fall);
+        break;
+
+      case KEY_RIGHT:
+        move_right(&t, &field, 1);
+        break;
+
+      case KEY_LEFT:
+        move_left(&t, &field, -1);
+        break;
+
+      case KEY_UP:
+        rotate_tetromino(&t, &field, t.type);
+        break;
+    }
+
+    if (is_game_over(&t, &field)) {
+      render_game_over(game_win);
+      sleep(5);
+      running = false;
+    }
+
+    render_all(borders_win, game_win, &field, &t);
+  }
+}

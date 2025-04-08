@@ -83,3 +83,7 @@ double get_elapsed_time(struct timespec *start, struct timespec *end);
 bool is_full_row(GameField *field, int row);
 bool has_full_rows(GameField *field);
 void shift_rows(GameField *field, WINDOW *game_win);
+
+void game_loop(GameField field, int ch, Tetromino t, bool running,
+               struct timespec last_fall, struct timespec current_time,
+               WINDOW *borders_win, WINDOW *game_win);
