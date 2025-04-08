@@ -73,7 +73,7 @@ bool is_game_over(Tetromino *t, GameField *field);
 bool is_collision_on_sides(Tetromino *t, GameField *field, int direction);
 bool is_collision_below(Tetromino *t, GameField *field);
 
-bool can_rotate(Tetromino *rotated, GameField *field);
+bool can_rotate(Tetromino *t, GameField *field);
 void rotate_tetromino(Tetromino *t, GameField *field, TetrominoType type);
 
 void stick_to_bottom(Tetromino *t, GameField *field);
@@ -84,7 +84,7 @@ double get_elapsed_time(struct timespec *start, struct timespec *end);
 
 bool is_full_row(GameField *field, int row);
 bool has_full_rows(GameField *field);
-void shift_rows(GameField *field, WINDOW *game_win);
+void shift_rows(GameField *field);
 
 // main loop of game
 void game_loop(GameField field, int ch, Tetromino t, bool running,

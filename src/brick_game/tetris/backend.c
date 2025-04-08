@@ -102,10 +102,10 @@ bool is_collision_below(Tetromino *t, GameField *field) {
   return false;
 }
 
-bool can_rotate(Tetromino *rotated, GameField *field) {
+bool can_rotate(Tetromino *t, GameField *field) {
   for (int i = 0; i < 4; i++) {
-    int x = rotated->blocks[i].x;
-    int y = rotated->blocks[i].y;
+    int x = t->blocks[i].x;
+    int y = t->blocks[i].y;
 
     if (is_out_of_borders(x, y) || is_cell_occupied(field, x, y)) {
       return false;
@@ -185,7 +185,7 @@ bool has_full_rows(GameField *field) {
   return false;
 }
 
-void shift_rows(GameField *field, WINDOW *game_win) {
+void shift_rows(GameField *field) {
   for (int row = 0; row < FIELD_HEIGHT; row++) {
     if (is_full_row(field, row)) {
       for (int k = row; k > 0; k--) {            // rows
@@ -218,7 +218,7 @@ void game_loop(GameField field, int ch, Tetromino t, bool running,
           render_all(borders_win, game_win, next_win, &field, &t);
 
           usleep(SHIFT_DELAY);
-          shift_rows(&field, game_win);
+          shift_rows(&field);
         }
         init_tetromino(&t, generate_rand_tetromino());
       }
@@ -240,7 +240,7 @@ void game_loop(GameField field, int ch, Tetromino t, bool running,
             render_all(borders_win, game_win, next_win, &field, &t);
 
             usleep(SHIFT_DELAY);
-            shift_rows(&field, game_win);
+            shift_rows(&field);
           }
           init_tetromino(&t, generate_rand_tetromino());
         }
