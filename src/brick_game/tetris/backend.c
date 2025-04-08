@@ -154,7 +154,7 @@ void stick_to_bottom(Tetromino *t, GameField *field) {
 int generate_rand_tetromino() {
   int result;
   srand(clock());
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 20; i++) {
     result = rand() % TETROMINO_COUNT;
   }
   return result;
@@ -203,7 +203,7 @@ void shift_rows(GameField *field, WINDOW *game_win) {
 
 void game_loop(GameField field, int ch, Tetromino t, bool running,
                struct timespec last_fall, struct timespec current_time,
-               WINDOW *borders_win, WINDOW *game_win) {
+               WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win) {
   while (running) {
     clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время
 
@@ -215,7 +215,7 @@ void game_loop(GameField field, int ch, Tetromino t, bool running,
       if (is_collision_below(&t, &field)) {
         stick_to_bottom(&t, &field);
         if (has_full_rows(&field)) {
-          render_all(borders_win, game_win, &field, &t);
+          render_all(borders_win, game_win, next_win, &field, &t);
 
           usleep(SHIFT_DELAY);
           shift_rows(&field, game_win);
@@ -237,7 +237,7 @@ void game_loop(GameField field, int ch, Tetromino t, bool running,
         if (is_collision_below(&t, &field)) {
           stick_to_bottom(&t, &field);
           if (has_full_rows(&field)) {
-            render_all(borders_win, game_win, &field, &t);
+            render_all(borders_win, game_win, next_win, &field, &t);
 
             usleep(SHIFT_DELAY);
             shift_rows(&field, game_win);
@@ -266,6 +266,6 @@ void game_loop(GameField field, int ch, Tetromino t, bool running,
       running = false;
     }
 
-    render_all(borders_win, game_win, &field, &t);
+    render_all(borders_win, game_win, next_win, &field, &t);
   }
 }

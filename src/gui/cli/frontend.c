@@ -43,11 +43,12 @@ void draw_box(WINDOW *win) {
   wattroff(win, COLOR_PAIR(1));
 }
 
-void render_all(WINDOW *borders_win, WINDOW *game_win, GameField *field,
-                Tetromino *t) {
+void render_all(WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win,
+                GameField *field, Tetromino *t) {
   werase(game_win);
 
   draw_box(borders_win);
+  draw_next_win(next_win);
   draw_field(field, game_win);
   draw_tetromino(t, game_win);
 
@@ -65,4 +66,11 @@ void render_game_over(WINDOW *game_win) {
   wrefresh(game_win);
 
   wgetch(game_win);
+}
+
+void draw_next_win(WINDOW *win) {
+  wattron(win, COLOR_PAIR(1));
+  box(win, 0, 0);
+  mvwprintw(win, 0, 2, "Next");
+  wattroff(win, COLOR_PAIR(1));
 }
