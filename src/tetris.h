@@ -60,8 +60,8 @@ void render_game_over(WINDOW *game_win);
 void draw_next_win(WINDOW *win);
 
 // backend
-void init_tetromino(Tetromino *t, TetrominoType type);
-void init_field(GameField *field);
+Tetromino init_tetromino();
+GameField init_field();
 GameInfo_t init_game_info();
 
 void move_down(Tetromino *t);
