@@ -62,6 +62,7 @@ void draw_next_win(WINDOW *win);
 // backend
 void init_tetromino(Tetromino *t, TetrominoType type);
 void init_field(GameField *field);
+GameInfo_t init_game_info();
 
 void move_down(Tetromino *t);
 void move_right(Tetromino *t, GameField *field, int direction);

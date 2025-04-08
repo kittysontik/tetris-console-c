@@ -16,11 +16,12 @@ int main(void) {
   int ch;
   Tetromino tetromino;
   Tetromino next_tetromino;
+  GameInfo_t game_info;
   bool running = true;
 
   init_field(&field);
   init_tetromino(&tetromino, generate_rand_tetromino());
-  init_tetromino(&next_tetromino, generate_rand_tetromino());
+  // init_tetromino(&next_tetromino, generate_rand_tetromino());
 
   render_all(borders_win, game_win, next_win, &field, &tetromino);
 

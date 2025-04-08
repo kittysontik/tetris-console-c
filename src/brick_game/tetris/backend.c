@@ -1,9 +1,9 @@
 #include "../../tetris.h"
 
-void init_tetromino(Tetromino *t, TetrominoType type) {
-  if (t == NULL) return;
+Tetromino init_tetromino() {
+  Tetromino t;
   int center_x = FIELD_WIDTH / 2;
-  t->type = type;
+  t.type = generate_rand_tetromino();
 
   const int shapes[7][4][2] = {
       {{-2, 0}, {-1, 0}, {0, 0}, {1, 0}},  // TETROMINO_I
@@ -22,17 +22,36 @@ void init_tetromino(Tetromino *t, TetrominoType type) {
   };
 
   for (int i = 0; i < 4; i++) {
-    t->blocks[i].x = center_x + shapes[type][i][0];
-    t->blocks[i].y = shapes[type][i][1];
+    t.blocks[i].x = center_x + shapes[t.type][i][0];
+    t.blocks[i].y = shapes[t.type][i][1];
   }
+  return t;
 }
 
-void init_field(GameField *field) {
+GameField init_field() {
+  GameField field;
   for (int y = 0; y < FIELD_HEIGHT; y++) {
     for (int x = 0; x < FIELD_WIDTH; x++) {
-      field->cells[y][x] = 0;
+      field.cells[y][x] = 0;
     }
   }
+  return field;
+}
+
+GameInfo_t init_game_info() {
+  GameInfo_t game_info;
+
+  game_info.score = 0;
+  game_info.high_score = 0;
+  game_info.pause = 0;
+  game_info.speed = 0;
+  game_info.level = 0;
+
+  game_info.field = init_field();
+  game_info.tetromino = init_tetromino();
+  game_info.next_tetromino = init_tetromino();
+
+  return game_info;
 }
 
 void move_down(Tetromino *t) {
