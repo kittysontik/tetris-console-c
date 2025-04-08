@@ -35,7 +35,7 @@ void init_field(GameField *field) {
   }
 }
 
-void move_down(Tetromino *t, WINDOW *game_win) {
+void move_down(Tetromino *t) {
   for (int i = 0; i < 4; i++) {
     if (t->blocks[i].y < FIELD_HEIGHT) {
       t->blocks[i].y += 1;
@@ -211,7 +211,7 @@ void game_loop(GameField field, int ch, Tetromino t, bool running,
     double elapsed_time = get_elapsed_time(&last_fall, &current_time);
 
     if (elapsed_time >= FALL_DELAY) {
-      move_down(&t, game_win);
+      move_down(&t);
       if (is_collision_below(&t, &field)) {
         stick_to_bottom(&t, &field);
         if (has_full_rows(&field)) {
@@ -233,7 +233,7 @@ void game_loop(GameField field, int ch, Tetromino t, bool running,
         break;
 
       case KEY_DOWN:
-        move_down(&t, game_win);
+        move_down(&t);
         if (is_collision_below(&t, &field)) {
           stick_to_bottom(&t, &field);
           if (has_full_rows(&field)) {

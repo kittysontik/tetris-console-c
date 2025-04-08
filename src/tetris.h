@@ -40,7 +40,7 @@ typedef struct {
 typedef struct {
   GameField field;
   Tetromino tetromino;
-  int **next;
+  Tetromino next_tetromino;
   int score;
   int high_score;
   int level;
@@ -63,7 +63,7 @@ void draw_next_win(WINDOW *win);
 void init_tetromino(Tetromino *t, TetrominoType type);
 void init_field(GameField *field);
 
-void move_down(Tetromino *t, WINDOW *game_win);
+void move_down(Tetromino *t);
 void move_right(Tetromino *t, GameField *field, int direction);
 void move_left(Tetromino *t, GameField *field, int direction);
 
