@@ -1,5 +1,20 @@
 #include "../../tetris.h"
 
+void init_ncurses(WINDOW *game_win, WINDOW *borders_win) {
+  start_color();
+  cbreak();
+  keypad(stdscr, TRUE);
+  keypad(game_win, TRUE);
+  keypad(borders_win, TRUE);
+  nodelay(game_win, TRUE);  // Не блокируем getch()
+  noecho();
+  curs_set(0);
+}
+void init_colors() {
+  init_pair(1, COLOR_MAGENTA, COLOR_BLACK);
+  init_pair(2, COLOR_GREEN, COLOR_BLACK);
+}
+
 void draw_field(GameField *field, WINDOW *win) {
   wattron(win, COLOR_PAIR(1));
   for (int y = 0; y < FIELD_HEIGHT; y++) {
@@ -30,6 +45,8 @@ void draw_box(WINDOW *win) {
 
 void render_all(WINDOW *borders_win, WINDOW *game_win, GameField *field,
                 Tetromino *t) {
+  werase(game_win);
+
   draw_box(borders_win);
   draw_field(field, game_win);
   draw_tetromino(t, game_win);
@@ -40,4 +57,12 @@ void render_all(WINDOW *borders_win, WINDOW *game_win, GameField *field,
 
   // Обновляем все окна
   doupdate();
+}
+
+void render_game_over(WINDOW *game_win) {
+  wclear(game_win);
+  mvwprintw(game_win, FIELD_HEIGHT / 2, FIELD_WIDTH / 2, "Game Over!");
+  wrefresh(game_win);
+
+  wgetch(game_win);
 }

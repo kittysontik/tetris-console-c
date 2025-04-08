@@ -115,9 +115,9 @@ bool can_rotate(Tetromino *rotated, GameField *field) {
 }
 
 void rotate_tetromino(Tetromino *t, GameField *field, TetrominoType type) {
-  // if (!t || !field) {
-  //   return;
-  // }
+  if (!t || !field) {
+    return;
+  }
 
   if (type == TETROMINO_O) {
     return;  // Квадрат не вращается
@@ -160,14 +160,6 @@ int generate_rand_tetromino() {
   return result;
 }
 
-void game_over(WINDOW *game_win) {
-  wclear(game_win);
-  mvwprintw(game_win, FIELD_HEIGHT / 2, FIELD_WIDTH / 2, "Game Over!");
-  wrefresh(game_win);
-
-  wgetch(game_win);
-}
-
 // 1 нс = 10 в -9 степени сек.
 // перевод наносекунд в секунды
 double get_elapsed_time(struct timespec *start, struct timespec *end) {
@@ -207,113 +199,4 @@ void shift_rows(GameField *field, WINDOW *game_win) {
       row--;
     }
   }
-}
-
-int main(void) {
-  initscr();
-
-  int off_set_x = 0, off_set_y = 0;
-  off_set_y = ((getmaxy(stdscr) - WIN_HEIGHT) / 2);
-  off_set_x = (getmaxx(stdscr) - WIN_WIDTH) / 2;
-  WINDOW *borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, off_set_y, off_set_x);
-  WINDOW *game_win =
-      newwin(FIELD_HEIGHT, FIELD_WIDTH, off_set_y + 1, off_set_x + 1);
-
-  start_color();
-  cbreak();
-  keypad(stdscr, TRUE);
-  keypad(game_win, TRUE);
-  keypad(borders_win, TRUE);
-  nodelay(game_win, TRUE);  // Не блокируем getch()
-  noecho();
-  curs_set(0);
-
-  init_pair(1, COLOR_MAGENTA, COLOR_BLACK);
-  init_pair(2, COLOR_GREEN, COLOR_BLACK);
-
-  GameField field;
-  int ch;
-  Tetromino t;
-  bool running = true;
-
-  init_field(&field);
-  init_tetromino(&t, generate_rand_tetromino());
-
-  draw_box(borders_win);
-  draw_field(&field, game_win);
-  draw_tetromino(&t, game_win);
-
-  wrefresh(borders_win);
-  wrefresh(game_win);
-
-  struct timespec last_fall, current_time;
-
-  clock_gettime(CLOCK_MONOTONIC, &last_fall);  // Фиксируем время
-
-  while (running) {
-    clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время
-
-    // Считаем, сколько времени прошло с последнего зафиксированного момента
-    double elapsed_time = get_elapsed_time(&last_fall, &current_time);
-
-    if (elapsed_time >= FALL_DELAY) {
-      move_down(&t, game_win);
-      if (is_collision_below(&t, &field)) {
-        stick_to_bottom(&t, &field);
-        if (has_full_rows(&field)) {
-          draw_field(&field, game_win);
-          // Подготавливаем окна для перерисовки
-          wnoutrefresh(game_win);
-          // Обновляем все окна
-          doupdate();
-          usleep(SHIFT_DELAY);
-          shift_rows(&field, game_win);
-        }
-        init_tetromino(&t, generate_rand_tetromino());
-      }
-      clock_gettime(CLOCK_MONOTONIC, &last_fall);
-    }
-
-    ch = wgetch(game_win);
-
-    switch (ch) {
-      case 'q':
-        running = false;
-        break;
-
-      case KEY_DOWN:
-        move_down(&t, game_win);
-        if (is_collision_below(&t, &field)) {
-          stick_to_bottom(&t, &field);
-          init_tetromino(&t, generate_rand_tetromino());
-        }
-        clock_gettime(CLOCK_MONOTONIC, &last_fall);
-        break;
-
-      case KEY_RIGHT:
-        move_right(&t, &field, 1);
-        break;
-
-      case KEY_LEFT:
-        move_left(&t, &field, -1);
-        break;
-
-      case KEY_UP:
-        rotate_tetromino(&t, &field, t.type);
-        break;
-    }
-
-    if (is_game_over(&t, &field)) {
-      game_over(game_win);
-      sleep(5);
-      running = false;
-    }
-
-    werase(game_win);
-
-    render_all(borders_win, game_win, &field, &t);
-  }
-
-  endwin();
-  return 0;
 }
