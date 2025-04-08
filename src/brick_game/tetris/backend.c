@@ -218,6 +218,46 @@ void shift_rows(GameInfo_t *game_info) {
   }
 }
 
+bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
+                       struct timespec current_time, WINDOW *borders_win,
+                       WINDOW *game_win, WINDOW *next_win) {
+  switch (ch) {
+    case 'q':
+      return false;
+      break;
+
+    case KEY_DOWN:
+      move_down(game_info);
+      if (is_collision_below(game_info)) {
+        stick_to_bottom(game_info);
+        if (has_full_rows(&game_info->field)) {
+          render_all(borders_win, game_win, next_win, &game_info->field,
+                     &game_info->tetromino);
+
+          usleep(SHIFT_DELAY);
+          shift_rows(game_info);
+        }
+        game_info->tetromino = init_tetromino();
+      }
+      clock_gettime(CLOCK_MONOTONIC, &last_fall);
+      break;
+
+    case KEY_RIGHT:
+      move_right(game_info, 1);
+      break;
+
+    case KEY_LEFT:
+      move_left(game_info, -1);
+      break;
+
+    case KEY_UP:
+      rotate_tetromino(game_info);
+      break;
+  }
+
+  return true;
+}
+
 void game_loop(GameInfo_t *game_info, int ch, bool running,
                struct timespec last_fall, struct timespec current_time,
                WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win) {
@@ -244,40 +284,8 @@ void game_loop(GameInfo_t *game_info, int ch, bool running,
     }
 
     ch = wgetch(game_win);
-
-    switch (ch) {
-      case 'q':
-        running = false;
-        break;
-
-      case KEY_DOWN:
-        move_down(game_info);
-        if (is_collision_below(game_info)) {
-          stick_to_bottom(game_info);
-          if (has_full_rows(&game_info->field)) {
-            render_all(borders_win, game_win, next_win, &game_info->field,
-                       &game_info->tetromino);
-
-            usleep(SHIFT_DELAY);
-            shift_rows(game_info);
-          }
-          game_info->tetromino = init_tetromino();
-        }
-        clock_gettime(CLOCK_MONOTONIC, &last_fall);
-        break;
-
-      case KEY_RIGHT:
-        move_right(game_info, 1);
-        break;
-
-      case KEY_LEFT:
-        move_left(game_info, -1);
-        break;
-
-      case KEY_UP:
-        rotate_tetromino(game_info);
-        break;
-    }
+    running = handle_user_input(ch, game_info, last_fall, current_time,
+                                borders_win, game_win, next_win);
 
     if (is_game_over(game_info)) {
       render_game_over(game_win);
