@@ -7,8 +7,8 @@
 #define FIELD_WIDTH 10
 #define WIN_HEIGHT 22
 #define WIN_WIDTH 12
-#define OFF_SET_Y ((getmaxy(stdscr) - WIN_HEIGHT) / 2)
-#define OFF_SET_X ((getmaxx(stdscr) - WIN_WIDTH) / 2)
+#define OFFSET_Y ((getmaxy(stdscr) - WIN_HEIGHT) / 2)
+#define OFFSET_X ((getmaxx(stdscr) - WIN_WIDTH) / 2)
 
 #define FALL_DELAY 0.5          // задержка в 0.5 секунды
 #define SHIFT_DELAY 5 * 100000  // задержка в 0.5 секунды в микросекундах
@@ -39,7 +39,7 @@ typedef struct {
 
 typedef struct {
   GameField field;
-  Tetromino tetromino;
+  Tetromino current_tetromino;
   Tetromino next_tetromino;
   int score;
   int high_score;
@@ -55,14 +55,16 @@ void draw_field(GameField *field, WINDOW *win);
 void draw_tetromino(Tetromino *t, WINDOW *win);
 void draw_box(WINDOW *win);
 void render_all(WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win,
-                GameField *field, Tetromino *t);
-void render_game_over(WINDOW *game_win);
+                GameField *field, Tetromino *t, Tetromino *next);
+void render_game_over(WINDOW *game_win, WINDOW *next_win);
 void draw_next_win(WINDOW *win);
 
 // backend
 Tetromino init_tetromino();
 GameField init_field();
 GameInfo_t init_game_info();
+
+void generate_next_tetromino(GameInfo_t *game_info);
 
 void move_down(GameInfo_t *game_info);
 void move_right(GameInfo_t *game_info, int direction);

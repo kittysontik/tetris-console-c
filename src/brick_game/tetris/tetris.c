@@ -2,12 +2,13 @@
 
 int main(void) {
   initscr();
+  int offset_y = OFFSET_Y;
+  int offset_x = OFFSET_X;
 
-  WINDOW *borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, OFF_SET_Y, OFF_SET_X);
+  WINDOW *borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, offset_y, offset_x);
   WINDOW *game_win =
-      newwin(FIELD_HEIGHT, FIELD_WIDTH, OFF_SET_Y + 1, OFF_SET_X + 1);
-  WINDOW *next_win =
-      newwin(6, 8, WIN_HEIGHT + OFF_SET_Y, WIN_WIDTH + OFF_SET_X);
+      newwin(FIELD_HEIGHT, FIELD_WIDTH, offset_y + 1, offset_x + 1);
+  WINDOW *next_win = newwin(6, 8, offset_y + 7, WIN_WIDTH + offset_x + 1);
 
   init_ncurses(game_win, borders_win);
   init_colors();
@@ -18,7 +19,7 @@ int main(void) {
   bool running = true;
 
   render_all(borders_win, game_win, next_win, &game_info.field,
-             &game_info.tetromino);
+             &game_info.current_tetromino, &game_info.next_tetromino);
 
   struct timespec last_fall, current_time;
   clock_gettime(CLOCK_MONOTONIC, &last_fall);  // Фиксируем время

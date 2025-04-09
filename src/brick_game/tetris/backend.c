@@ -48,7 +48,7 @@ GameInfo_t init_game_info() {
   game_info.level = 0;
 
   game_info.field = init_field();
-  game_info.tetromino = init_tetromino();
+  game_info.current_tetromino = init_tetromino();
   game_info.next_tetromino = init_tetromino();
 
   return game_info;
@@ -56,8 +56,8 @@ GameInfo_t init_game_info() {
 
 void move_down(GameInfo_t *game_info) {
   for (int i = 0; i < 4; i++) {
-    if (game_info->tetromino.blocks[i].y < FIELD_HEIGHT) {
-      game_info->tetromino.blocks[i].y += 1;
+    if (game_info->current_tetromino.blocks[i].y < FIELD_HEIGHT) {
+      game_info->current_tetromino.blocks[i].y += 1;
     }
   }
 }
@@ -72,8 +72,8 @@ bool is_cell_occupied(GameInfo_t *game_info, int x, int y) {
 
 bool is_game_over(GameInfo_t *game_info) {
   for (int i = 0; i < 4; i++) {
-    int x = game_info->tetromino.blocks[i].x;
-    int y = game_info->tetromino.blocks[i].y;
+    int x = game_info->current_tetromino.blocks[i].x;
+    int y = game_info->current_tetromino.blocks[i].y;
     if (is_cell_occupied(game_info, x, y)) {
       return true;
     }
@@ -83,8 +83,8 @@ bool is_game_over(GameInfo_t *game_info) {
 
 bool is_collision_on_sides(GameInfo_t *game_info, int direction) {
   for (int i = 0; i < 4; i++) {
-    int next_x = game_info->tetromino.blocks[i].x + direction;
-    int y = game_info->tetromino.blocks[i].y;
+    int next_x = game_info->current_tetromino.blocks[i].x + direction;
+    int y = game_info->current_tetromino.blocks[i].y;
 
     if (is_out_of_borders(next_x, y) ||
         is_cell_occupied(game_info, next_x, y)) {
@@ -97,7 +97,7 @@ bool is_collision_on_sides(GameInfo_t *game_info, int direction) {
 void move_right(GameInfo_t *game_info, int direction) {
   if (!is_collision_on_sides(game_info, direction)) {
     for (int i = 0; i < 4; i++) {
-      game_info->tetromino.blocks[i].x += 1;
+      game_info->current_tetromino.blocks[i].x += 1;
     }
   }
 }
@@ -105,15 +105,15 @@ void move_right(GameInfo_t *game_info, int direction) {
 void move_left(GameInfo_t *game_info, int direction) {
   if (!is_collision_on_sides(game_info, direction)) {
     for (int i = 0; i < 4; i++) {
-      game_info->tetromino.blocks[i].x -= 1;
+      game_info->current_tetromino.blocks[i].x -= 1;
     }
   }
 }
 
 bool is_collision_below(GameInfo_t *game_info) {
   for (int i = 0; i < 4; i++) {
-    int next_y = game_info->tetromino.blocks[i].y + 1;
-    int x = game_info->tetromino.blocks[i].x;
+    int next_y = game_info->current_tetromino.blocks[i].y + 1;
+    int x = game_info->current_tetromino.blocks[i].x;
 
     if (is_out_of_borders(x, next_y) ||
         is_cell_occupied(game_info, x, next_y)) {
@@ -136,15 +136,15 @@ bool can_rotate(GameInfo_t *game_info, Tetromino *rotated) {
 }
 
 void rotate_tetromino(GameInfo_t *game_info) {
-  if (game_info->tetromino.type == TETROMINO_O) {
+  if (game_info->current_tetromino.type == TETROMINO_O) {
     return;  // Квадрат не вращается
   }
-  Tetromino rotated = game_info->tetromino;
+  Tetromino rotated = game_info->current_tetromino;
   Block center = rotated.blocks[0];
 
   for (int i = 1; i < 4; i++) {
-    int x = game_info->tetromino.blocks[i].x - center.x;
-    int y = game_info->tetromino.blocks[i].y - center.y;
+    int x = game_info->current_tetromino.blocks[i].x - center.x;
+    int y = game_info->current_tetromino.blocks[i].y - center.y;
 
     rotated.blocks[i].x = center.x - y;
     rotated.blocks[i].y = center.y + x;
@@ -154,13 +154,13 @@ void rotate_tetromino(GameInfo_t *game_info) {
     return;
   }
 
-  game_info->tetromino = rotated;
+  game_info->current_tetromino = rotated;
 }
 
 void stick_to_bottom(GameInfo_t *game_info) {
   for (int i = 0; i < 4; i++) {
-    int y = game_info->tetromino.blocks[i].y;
-    int x = game_info->tetromino.blocks[i].x;
+    int y = game_info->current_tetromino.blocks[i].y;
+    int x = game_info->current_tetromino.blocks[i].x;
 
     if (y >= 0 && y <= FIELD_HEIGHT && x >= 0 && x <= FIELD_WIDTH) {
       game_info->field.cells[y][x] = 1;
@@ -218,6 +218,11 @@ void shift_rows(GameInfo_t *game_info) {
   }
 }
 
+void generate_next_tetromino(GameInfo_t *game_info) {
+  game_info->current_tetromino = game_info->next_tetromino;
+  game_info->next_tetromino = init_tetromino();
+}
+
 bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
                        struct timespec current_time, WINDOW *borders_win,
                        WINDOW *game_win, WINDOW *next_win) {
@@ -232,12 +237,12 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
         stick_to_bottom(game_info);
         if (has_full_rows(&game_info->field)) {
           render_all(borders_win, game_win, next_win, &game_info->field,
-                     &game_info->tetromino);
+                     &game_info->current_tetromino, &game_info->next_tetromino);
 
           usleep(SHIFT_DELAY);
           shift_rows(game_info);
         }
-        game_info->tetromino = init_tetromino();
+        generate_next_tetromino(game_info);
       }
       clock_gettime(CLOCK_MONOTONIC, &last_fall);
       break;
@@ -273,12 +278,12 @@ void game_loop(GameInfo_t *game_info, int ch, bool running,
         stick_to_bottom(game_info);
         if (has_full_rows(&game_info->field)) {
           render_all(borders_win, game_win, next_win, &game_info->field,
-                     &game_info->tetromino);
+                     &game_info->current_tetromino, &game_info->next_tetromino);
 
           usleep(SHIFT_DELAY);
           shift_rows(game_info);
         }
-        game_info->tetromino = init_tetromino();
+        generate_next_tetromino(game_info);
       }
       clock_gettime(CLOCK_MONOTONIC, &last_fall);
     }
@@ -288,12 +293,12 @@ void game_loop(GameInfo_t *game_info, int ch, bool running,
                                 borders_win, game_win, next_win);
 
     if (is_game_over(game_info)) {
-      render_game_over(game_win);
+      render_game_over(game_win, next_win);
       sleep(5);
       running = false;
     }
 
     render_all(borders_win, game_win, next_win, &game_info->field,
-               &game_info->tetromino);
+               &game_info->current_tetromino, &game_info->next_tetromino);
   }
 }
