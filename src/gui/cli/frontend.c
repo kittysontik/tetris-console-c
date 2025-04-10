@@ -1,12 +1,12 @@
 #include "../../tetris.h"
 
-void init_ncurses(WINDOW *game_win, WINDOW *borders_win) {
+void init_ncurses(GameWindows *game_windows) {
   start_color();
   cbreak();
   keypad(stdscr, TRUE);
-  keypad(game_win, TRUE);
-  keypad(borders_win, TRUE);
-  nodelay(game_win, TRUE);  // Не блокируем getch()
+  keypad(game_windows->game_win, TRUE);
+  keypad(game_windows->borders_win, TRUE);
+  nodelay(game_windows->game_win, TRUE);  // Не блокируем getch()
   noecho();
   curs_set(0);
 }
@@ -15,18 +15,18 @@ void init_colors() {
   init_pair(2, COLOR_GREEN, COLOR_BLACK);
 }
 
-void draw_field(GameField *field, WINDOW *win) {
-  wattron(win, COLOR_PAIR(1));
+void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
+  wattron(game_windows->game_win, COLOR_PAIR(1));
   for (int y = 0; y < FIELD_HEIGHT; y++) {
     for (int x = 0; x < FIELD_WIDTH; x++) {
-      if (field->cells[y][x] == 1) {
-        mvwprintw(win, y, x, "#");
+      if (game_info->field.cells[y][x] == 1) {
+        mvwprintw(game_windows->game_win, y, x, "#");
       } else {
-        mvwprintw(win, y, x, ".");
+        mvwprintw(game_windows->game_win, y, x, ".");
       }
     }
   }
-  wattroff(win, COLOR_PAIR(1));
+  wattroff(game_windows->game_win, COLOR_PAIR(1));
 }
 
 void draw_tetromino(Tetromino *t, WINDOW *win) {
@@ -51,40 +51,53 @@ void draw_box(WINDOW *win) {
   wattroff(win, COLOR_PAIR(1));
 }
 
-void render_all(WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win,
-                GameField *field, Tetromino *t, Tetromino *next) {
-  werase(game_win);
-  werase(next_win);
+void render_all(GameWindows *game_windows, GameInfo_t *game_info) {
+  werase(game_windows->game_win);
+  werase(game_windows->next_win);
 
-  draw_box(borders_win);
-  draw_next_win(next_win);
-  draw_field(field, game_win);
-  draw_tetromino(t, game_win);
-  draw_next_tetromino(next, next_win);
+  draw_box(game_windows->borders_win);
+  draw_next_win(game_windows);
+  draw_field(game_info, game_windows);
+  draw_tetromino(&game_info->current_tetromino, game_windows->game_win);
+  draw_next_tetromino(&game_info->next_tetromino, game_windows->next_win);
 
   // Подготавливаем окна для перерисовки
-  wnoutrefresh(borders_win);
-  wnoutrefresh(game_win);
-  wnoutrefresh(next_win);
+  wnoutrefresh(game_windows->borders_win);
+  wnoutrefresh(game_windows->game_win);
+  wnoutrefresh(game_windows->next_win);
 
   // Обновляем все окна
   doupdate();
 }
 
-void render_game_over(WINDOW *game_win, WINDOW *next_win) {
-  wclear(game_win);
-  wclear(next_win);
+void render_game_over(GameWindows *game_windows) {
+  wclear(game_windows->game_win);
+  wclear(game_windows->next_win);
 
-  mvwprintw(game_win, FIELD_HEIGHT / 2, 1, "Game Over");
-  wrefresh(game_win);
-  wrefresh(next_win);
+  mvwprintw(game_windows->game_win, FIELD_HEIGHT / 2, 1, "Game Over");
+  wrefresh(game_windows->game_win);
+  wrefresh(game_windows->next_win);
 
-  wgetch(game_win);
+  wgetch(game_windows->game_win);
 }
 
-void draw_next_win(WINDOW *win) {
-  wattron(win, COLOR_PAIR(1));
-  box(win, 0, 0);
-  mvwprintw(win, 0, 2, "Next");
-  wattroff(win, COLOR_PAIR(1));
+void draw_next_win(GameWindows *game_windows) {
+  wattron(game_windows->next_win, COLOR_PAIR(1));
+  box(game_windows->next_win, 0, 0);
+  mvwprintw(game_windows->next_win, 0, 2, "Next");
+  wattroff(game_windows->next_win, COLOR_PAIR(1));
+}
+
+GameWindows init_windows() {
+  int offset_y = OFFSET_Y;
+  int offset_x = OFFSET_X;
+
+  GameWindows game_windows;
+
+  game_windows.borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, offset_y, offset_x);
+  game_windows.game_win =
+      newwin(FIELD_HEIGHT, FIELD_WIDTH, offset_y + 1, offset_x + 1);
+  game_windows.next_win = newwin(6, 8, offset_y + 7, WIN_WIDTH + offset_x + 1);
+
+  return game_windows;
 }

@@ -224,8 +224,8 @@ void generate_next_tetromino(GameInfo_t *game_info) {
 }
 
 bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
-                       struct timespec current_time, WINDOW *borders_win,
-                       WINDOW *game_win, WINDOW *next_win) {
+                       struct timespec current_time,
+                       GameWindows *game_windows) {
   switch (ch) {
     case 'q':
       return false;
@@ -236,8 +236,7 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
       if (is_collision_below(game_info)) {
         stick_to_bottom(game_info);
         if (has_full_rows(&game_info->field)) {
-          render_all(borders_win, game_win, next_win, &game_info->field,
-                     &game_info->current_tetromino, &game_info->next_tetromino);
+          render_all(game_windows, game_info);
 
           usleep(SHIFT_DELAY);
           shift_rows(game_info);
@@ -265,7 +264,7 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
 
 void game_loop(GameInfo_t *game_info, int ch, bool running,
                struct timespec last_fall, struct timespec current_time,
-               WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win) {
+               GameWindows *game_windows) {
   while (running) {
     clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время
 
@@ -277,8 +276,7 @@ void game_loop(GameInfo_t *game_info, int ch, bool running,
       if (is_collision_below(game_info)) {
         stick_to_bottom(game_info);
         if (has_full_rows(&game_info->field)) {
-          render_all(borders_win, game_win, next_win, &game_info->field,
-                     &game_info->current_tetromino, &game_info->next_tetromino);
+          render_all(game_windows, game_info);
 
           usleep(SHIFT_DELAY);
           shift_rows(game_info);
@@ -288,17 +286,16 @@ void game_loop(GameInfo_t *game_info, int ch, bool running,
       clock_gettime(CLOCK_MONOTONIC, &last_fall);
     }
 
-    ch = wgetch(game_win);
-    running = handle_user_input(ch, game_info, last_fall, current_time,
-                                borders_win, game_win, next_win);
+    ch = wgetch(game_windows->game_win);
+    running =
+        handle_user_input(ch, game_info, last_fall, current_time, game_windows);
 
     if (is_game_over(game_info)) {
-      render_game_over(game_win, next_win);
+      render_game_over(game_windows);
       sleep(5);
       running = false;
     }
 
-    render_all(borders_win, game_win, next_win, &game_info->field,
-               &game_info->current_tetromino, &game_info->next_tetromino);
+    render_all(game_windows, game_info);
   }
 }

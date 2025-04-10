@@ -13,15 +13,15 @@
 #define FALL_DELAY 0.5          // задержка в 0.5 секунды
 #define SHIFT_DELAY 5 * 100000  // задержка в 0.5 секунды в микросекундах
 
-typedef struct {
+typedef struct GameField {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
 } GameField;
 
-typedef struct {
+typedef struct Block {
   int x, y;
 } Block;
 
-typedef enum {
+typedef enum TetrominoType {
   TETROMINO_I,  // линия
   TETROMINO_L,  // Г-образная
   TETROMINO_J,  // обратная Г-образная
@@ -32,12 +32,12 @@ typedef enum {
   TETROMINO_COUNT
 } TetrominoType;
 
-typedef struct {
+typedef struct Tetromino {
   Block blocks[4];
   TetrominoType type;
 } Tetromino;
 
-typedef struct {
+typedef struct GameInfo_t {
   GameField field;
   Tetromino current_tetromino;
   Tetromino next_tetromino;
@@ -48,16 +48,23 @@ typedef struct {
   int pause;
 } GameInfo_t;
 
+typedef struct GameWindows {
+  WINDOW *game_win;
+  WINDOW *borders_win;
+  WINDOW *next_win;
+} GameWindows;
+
 // frontend
-void init_ncurses(WINDOW *game_win, WINDOW *borders_win);
+GameWindows init_windows();
+void init_ncurses(GameWindows *game_windows);
 void init_colors();
-void draw_field(GameField *field, WINDOW *win);
+void draw_field(GameInfo_t *game_info, GameWindows *game_windows);
 void draw_tetromino(Tetromino *t, WINDOW *win);
+void draw_next_tetromino(Tetromino *t, WINDOW *win);
 void draw_box(WINDOW *win);
-void render_all(WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win,
-                GameField *field, Tetromino *t, Tetromino *next);
-void render_game_over(WINDOW *game_win, WINDOW *next_win);
-void draw_next_win(WINDOW *win);
+void render_all(GameWindows *game_windows, GameInfo_t *game_info);
+void render_game_over(GameWindows *game_windows);
+void draw_next_win(GameWindows *game_windows);
 
 // backend
 Tetromino init_tetromino();
@@ -89,7 +96,10 @@ bool is_full_row(GameField *field, int row);
 bool has_full_rows(GameField *field);
 void shift_rows(GameInfo_t *game_info);
 
+bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
+                       struct timespec current_time, GameWindows *game_windows);
+
 // main loop of game
 void game_loop(GameInfo_t *game_info, int ch, bool running,
                struct timespec last_fall, struct timespec current_time,
-               WINDOW *borders_win, WINDOW *game_win, WINDOW *next_win);
+               GameWindows *game_windows);
