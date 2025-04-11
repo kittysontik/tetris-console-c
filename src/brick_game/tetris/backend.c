@@ -231,47 +231,54 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
       return false;
       break;
 
-    case KEY_DOWN:
-      move_down(game_info);
-      if (is_collision_below(game_info)) {
-        stick_to_bottom(game_info);
-        if (has_full_rows(&game_info->field)) {
-          render_all(game_windows, game_info);
+    case 'p':
+      game_info->pause = !game_info->pause;
+      break;
 
-          usleep(SHIFT_DELAY);
-          shift_rows(game_info);
+    case KEY_DOWN:
+      if (!game_info->pause) {
+        move_down(game_info);
+        if (is_collision_below(game_info)) {
+          stick_to_bottom(game_info);
+          if (has_full_rows(&game_info->field)) {
+            render_all(game_windows, game_info);
+
+            usleep(SHIFT_DELAY);
+            shift_rows(game_info);
+          }
+          generate_next_tetromino(game_info);
         }
-        generate_next_tetromino(game_info);
+        clock_gettime(CLOCK_MONOTONIC, &last_fall);
       }
-      clock_gettime(CLOCK_MONOTONIC, &last_fall);
       break;
 
     case KEY_RIGHT:
-      move_right(game_info, 1);
+      if (!game_info->pause) move_right(game_info, 1);
       break;
 
     case KEY_LEFT:
-      move_left(game_info, -1);
+      if (!game_info->pause) move_left(game_info, -1);
       break;
 
     case KEY_UP:
-      rotate_tetromino(game_info);
+      if (!game_info->pause) rotate_tetromino(game_info);
       break;
   }
 
   return true;
 }
 
-void game_loop(GameInfo_t *game_info, int ch, bool running,
-               struct timespec last_fall, struct timespec current_time,
-               GameWindows *game_windows) {
+void game_loop(GameInfo_t *game_info, struct timespec last_fall,
+               struct timespec current_time, GameWindows *game_windows) {
+  int ch;
+  bool running = true;
   while (running) {
     clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время
 
     // Считаем, сколько времени прошло с последнего зафиксированного момента
     double elapsed_time = get_elapsed_time(&last_fall, &current_time);
 
-    if (elapsed_time >= FALL_DELAY) {
+    if (!game_info->pause && elapsed_time >= FALL_DELAY) {
       move_down(game_info);
       if (is_collision_below(game_info)) {
         stick_to_bottom(game_info);

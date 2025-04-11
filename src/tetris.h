@@ -100,6 +100,5 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
                        struct timespec current_time, GameWindows *game_windows);
 
 // main loop of game
-void game_loop(GameInfo_t *game_info, int ch, bool running,
-               struct timespec last_fall, struct timespec current_time,
-               GameWindows *game_windows);
+void game_loop(GameInfo_t *game_info, struct timespec last_fall,
+               struct timespec current_time, GameWindows *game_windows);
