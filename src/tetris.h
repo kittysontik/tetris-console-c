@@ -41,6 +41,7 @@ typedef struct GameInfo_t {
   GameField field;
   Tetromino current_tetromino;
   Tetromino next_tetromino;
+
   int score;
   int high_score;
   int level;
@@ -57,7 +58,7 @@ typedef struct GameWindows {
 // frontend
 GameWindows init_windows();
 void init_ncurses(GameWindows *game_windows);
-void init_colors();
+
 void draw_field(GameInfo_t *game_info, GameWindows *game_windows);
 void draw_tetromino(Tetromino *t, WINDOW *win);
 void draw_next_tetromino(Tetromino *t, WINDOW *win);
@@ -100,5 +101,4 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
                        struct timespec current_time, GameWindows *game_windows);
 
 // main loop of game
-void game_loop(GameInfo_t *game_info, struct timespec last_fall,
-               struct timespec current_time, GameWindows *game_windows);
+void game_loop(GameInfo_t *game_info, GameWindows *game_windows);

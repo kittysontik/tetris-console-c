@@ -1,5 +1,10 @@
 #include "../../tetris.h"
 
+void init_colors() {
+  init_pair(1, COLOR_MAGENTA, COLOR_BLACK);
+  init_pair(2, COLOR_GREEN, COLOR_BLACK);
+}
+
 void init_ncurses(GameWindows *game_windows) {
   start_color();
   cbreak();
@@ -9,10 +14,7 @@ void init_ncurses(GameWindows *game_windows) {
   nodelay(game_windows->game_win, TRUE);  // Не блокируем getch()
   noecho();
   curs_set(0);
-}
-void init_colors() {
-  init_pair(1, COLOR_MAGENTA, COLOR_BLACK);
-  init_pair(2, COLOR_GREEN, COLOR_BLACK);
+  init_colors();
 }
 
 void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
@@ -22,7 +24,7 @@ void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
       if (game_info->field.cells[y][x] == 1) {
         mvwprintw(game_windows->game_win, y, x, "#");
       } else {
-        mvwprintw(game_windows->game_win, y, x, ".");
+        mvwprintw(game_windows->game_win, y, x, " ");
       }
     }
   }

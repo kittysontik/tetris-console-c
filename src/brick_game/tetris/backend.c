@@ -1,5 +1,7 @@
 #include "../../tetris.h"
 
+
+
 Tetromino init_tetromino() {
   Tetromino t;
   int center_x = FIELD_WIDTH / 2;
@@ -55,10 +57,11 @@ GameInfo_t init_game_info() {
 }
 
 void move_down(GameInfo_t *game_info) {
+  if (is_collision_below(game_info)) {
+    return;
+  }
   for (int i = 0; i < 4; i++) {
-    if (game_info->current_tetromino.blocks[i].y < FIELD_HEIGHT) {
-      game_info->current_tetromino.blocks[i].y += 1;
-    }
+    game_info->current_tetromino.blocks[i].y += 1;
   }
 }
 
@@ -203,6 +206,9 @@ bool has_full_rows(GameField *field) {
 }
 
 void shift_rows(GameInfo_t *game_info) {
+  // перед удалением полной строки делаем паузу
+  usleep(SHIFT_DELAY);
+
   for (int row = 0; row < FIELD_HEIGHT; row++) {
     if (is_full_row(&game_info->field, row)) {
       for (int k = row; k > 0; k--) {            // rows
@@ -268,10 +274,13 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
   return true;
 }
 
-void game_loop(GameInfo_t *game_info, struct timespec last_fall,
-               struct timespec current_time, GameWindows *game_windows) {
+void game_loop(GameInfo_t *game_info, GameWindows *game_windows) {
+  struct timespec last_fall, current_time;
+  // Фиксируем время
+  clock_gettime(CLOCK_MONOTONIC, &last_fall);
   int ch;
   bool running = true;
+
   while (running) {
     clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время
 
@@ -279,16 +288,15 @@ void game_loop(GameInfo_t *game_info, struct timespec last_fall,
     double elapsed_time = get_elapsed_time(&last_fall, &current_time);
 
     if (!game_info->pause && elapsed_time >= FALL_DELAY) {
-      move_down(game_info);
       if (is_collision_below(game_info)) {
         stick_to_bottom(game_info);
         if (has_full_rows(&game_info->field)) {
           render_all(game_windows, game_info);
-
-          usleep(SHIFT_DELAY);
           shift_rows(game_info);
         }
         generate_next_tetromino(game_info);
+      } else {
+        move_down(game_info);
       }
       clock_gettime(CLOCK_MONOTONIC, &last_fall);
     }
