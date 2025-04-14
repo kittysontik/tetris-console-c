@@ -1,6 +1,15 @@
 #include "../../tetris.h"
 
-
+int get_min_y_from_tetromino(const int shape[4][2]) {
+  int min_y = shape[0][1];  // инициализиурем минимальную y-координату первым
+                            // блоком тетромино координатой y
+  for (int i = 1; i < 4; i++) {
+    if (shape[i][1] < min_y) {
+      min_y = shape[i][1];  // находим минимиальную y-координату в тетромино
+    }
+  }
+  return min_y;
+}
 
 Tetromino init_tetromino() {
   Tetromino t;
@@ -23,9 +32,12 @@ Tetromino init_tetromino() {
       {{-1, 1}, {0, 1}, {-2, 0}, {-1, 0}},  // TETROMINO_Z
   };
 
+  const int(*shape)[2] = shapes[t.type];  // двумерный массив
+  int min_y = get_min_y_from_tetromino(shape);
+
   for (int i = 0; i < 4; i++) {
     t.blocks[i].x = center_x + shapes[t.type][i][0];
-    t.blocks[i].y = shapes[t.type][i][1];
+    t.blocks[i].y = shapes[t.type][i][1] - min_y;
   }
   return t;
 }
