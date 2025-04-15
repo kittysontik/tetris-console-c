@@ -288,10 +288,20 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
 
 void game_loop(GameInfo_t *game_info, GameWindows *game_windows) {
   struct timespec last_fall, current_time;
+  int ch;
+  bool running = false;
+
+  render_menu(game_windows->menu_win);
+  ch = wgetch(game_windows->menu_win);
+  if (ch == 's' || ch == 'S') {
+    running = true;
+  }
+  werase(game_windows->menu_win);
+  wrefresh(game_windows->menu_win);
+
+  render_all(game_windows, game_info);
   // Фиксируем время
   clock_gettime(CLOCK_MONOTONIC, &last_fall);
-  int ch;
-  bool running = true;
 
   while (running) {
     clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время

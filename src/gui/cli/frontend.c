@@ -11,7 +11,9 @@ void init_ncurses(GameWindows *game_windows) {
   keypad(stdscr, TRUE);
   keypad(game_windows->game_win, TRUE);
   keypad(game_windows->borders_win, TRUE);
-  nodelay(game_windows->game_win, TRUE);  // Не блокируем getch()
+  nodelay(game_windows->game_win, TRUE);  // Не блокируем wgetch() во время игры
+  nodelay(game_windows->menu_win, FALSE);  // ждем ввод пользователя
+  keypad(game_windows->menu_win, TRUE);
   noecho();
   curs_set(0);
   init_colors();
@@ -67,20 +69,37 @@ void render_all(GameWindows *game_windows, GameInfo_t *game_info) {
   wnoutrefresh(game_windows->borders_win);
   wnoutrefresh(game_windows->game_win);
   wnoutrefresh(game_windows->next_win);
+  // wnoutrefresh(game_windows->menu_win);
 
   // Обновляем все окна
   doupdate();
 }
 
 void render_game_over(GameWindows *game_windows) {
-  wclear(game_windows->game_win);
-  wclear(game_windows->next_win);
+  werase(game_windows->game_win);
+  werase(game_windows->next_win);
+  werase(game_windows->borders_win);
 
-  mvwprintw(game_windows->game_win, FIELD_HEIGHT / 2, 1, "Game Over");
+  wattron(game_windows->menu_win, COLOR_PAIR(2));
+  mvwprintw(game_windows->menu_win, FIELD_HEIGHT / 2, 2, "Game Over");
+  wattroff(game_windows->menu_win, COLOR_PAIR(2));
+
   wrefresh(game_windows->game_win);
   wrefresh(game_windows->next_win);
+  wrefresh(game_windows->borders_win);
+  wrefresh(game_windows->menu_win);
+}
 
-  wgetch(game_windows->game_win);
+void render_menu(WINDOW *win) {
+  wattron(win, COLOR_PAIR(2));
+  mvwprintw(win, 6, 3, "TETRIS");
+  mvwprintw(win, 8, 0, "Start: s");
+  mvwprintw(win, 9, 0, "Pause: p");
+  mvwprintw(win, 10, 0, "Quit: q");
+  mvwprintw(win, 11, 0, "Move: arrow keys");
+  wattroff(win, COLOR_PAIR(2));
+
+  wrefresh(win);
 }
 
 void draw_next_win(GameWindows *game_windows) {
@@ -96,6 +115,7 @@ GameWindows init_windows() {
 
   GameWindows game_windows;
 
+  game_windows.menu_win = newwin(WIN_HEIGHT, WIN_HEIGHT, offset_y, offset_x);
   game_windows.borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, offset_y, offset_x);
   game_windows.game_win =
       newwin(FIELD_HEIGHT, FIELD_WIDTH, offset_y + 1, offset_x + 1);

@@ -50,9 +50,11 @@ typedef struct GameInfo_t {
 } GameInfo_t;
 
 typedef struct GameWindows {
+  WINDOW *menu_win;
   WINDOW *game_win;
   WINDOW *borders_win;
   WINDOW *next_win;
+
 } GameWindows;
 
 // frontend
@@ -66,6 +68,7 @@ void draw_box(WINDOW *win);
 void render_all(GameWindows *game_windows, GameInfo_t *game_info);
 void render_game_over(GameWindows *game_windows);
 void draw_next_win(GameWindows *game_windows);
+void render_menu(WINDOW *win);
 
 // backend
 Tetromino init_tetromino();
