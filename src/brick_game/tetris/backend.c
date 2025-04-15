@@ -219,7 +219,7 @@ bool has_full_rows(GameField *field) {
 
 void shift_rows(GameInfo_t *game_info) {
   // перед удалением полной строки делаем паузу
-  usleep(SHIFT_DELAY);
+  // usleep(SHIFT_DELAY);
 
   for (int row = 0; row < FIELD_HEIGHT; row++) {
     if (is_full_row(&game_info->field, row)) {
