@@ -263,14 +263,7 @@ void handle_user_input(int ch, GameInfo_t *game_info,
         return;
       }
       move_down(game_info);
-      if (is_collision_below(game_info)) {
-        stick_to_bottom(game_info);
-        if (has_full_rows(&game_info->field)) {
-          render_all(game_windows, game_info);
-          shift_rows(game_info);
-        }
-        generate_next_tetromino(game_info);
-      }
+      handle_stick(game_info, game_windows);
       break;
 
     case KEY_RIGHT:
@@ -365,32 +358,28 @@ void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
   double elapsed_time = get_elapsed_time(last_fall, current_time);
 
   if (!game_info->pause && elapsed_time >= FALL_DELAY) {
-    if (is_collision_below(game_info)) {
-      stick_to_bottom(game_info);
-      if (has_full_rows(&game_info->field)) {
-        render_all(game_windows, game_info);
-        shift_rows(game_info);
-      }
-      generate_next_tetromino(game_info);
-    } else {
+    bool is_stick_success = handle_stick(game_info, game_windows);
+    if (!is_stick_success) {
       move_down(game_info);
     }
-
+    // сбрасываем таймер
     clock_gettime(CLOCK_MONOTONIC, last_fall);
   }
 }
-// move_down(game_info);
-// if (is_collision_below(game_info)) {
-//   stick_to_bottom(game_info);
-//   if (has_full_rows(&game_info->field)) {
-//     render_all(game_windows, game_info);
-//     shift_rows(game_info);
-//   }
-//   generate_next_tetromino(game_info);
-// }
-// Обновляем last_fall, чтобы автоматическое падение не случилось сразу
-// после ручного
-// clock_gettime(CLOCK_MONOTONIC, last_fall);
+
+//
+bool handle_stick(GameInfo_t *game_info, GameWindows *game_windows) {
+  if (!is_collision_below(game_info)) {
+    return false;
+  }
+  stick_to_bottom(game_info);
+  if (has_full_rows(&game_info->field)) {
+    render_all(game_windows, game_info);
+    shift_rows(game_info);
+  }
+  generate_next_tetromino(game_info);
+  return true;
+}
 
 void check_game_over(GameInfo_t *game_info) {
   if (is_game_over(game_info)) {

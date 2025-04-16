@@ -129,3 +129,5 @@ void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
                            struct timespec *current_time);
 
 void check_game_over(GameInfo_t *game_info);
+
+bool handle_stick(GameInfo_t *game_info, GameWindows *game_windows);
