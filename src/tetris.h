@@ -118,3 +118,14 @@ void game_loop(GameInfo_t *game_info, GameWindows *game_windows);
 
 // states of finite state machine for tetris
 void run_game_state_machine(GameInfo_t *game_info, GameWindows *game_windows);
+
+void handle_state_playing(GameInfo_t *game_info, GameWindows *game_windows);
+
+void handle_input_if_any(GameInfo_t *game_info, GameWindows *game_windows,
+                         struct timespec *last_fall);
+
+void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
+                           struct timespec *last_fall,
+                           struct timespec *current_time);
+
+void check_game_over(GameInfo_t *game_info);

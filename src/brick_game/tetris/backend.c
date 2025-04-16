@@ -271,7 +271,9 @@ void handle_user_input(int ch, GameInfo_t *game_info,
           }
           generate_next_tetromino(game_info);
         }
-        clock_gettime(CLOCK_MONOTONIC, last_fall);
+        // Обновляем last_fall, чтобы автоматическое падение не случилось сразу
+        // после ручного
+        // clock_gettime(CLOCK_MONOTONIC, last_fall);
       }
       break;
 
@@ -312,12 +314,12 @@ void run_game_state_machine(GameInfo_t *game_info, GameWindows *game_windows) {
         break;
 
       case STATE_PLAYING:
-        game_loop(game_info, game_windows);
+        handle_state_playing(game_info, game_windows);
         break;
 
       case STATE_GAME_OVER:
         render_game_over(game_windows);
-        sleep(3);
+        sleep(5);
         game_info->game_state = STATE_EXIT;
         break;
 
@@ -329,9 +331,7 @@ void run_game_state_machine(GameInfo_t *game_info, GameWindows *game_windows) {
 }
 
 void game_loop(GameInfo_t *game_info, GameWindows *game_windows) {
-  int ch;
   struct timespec last_fall, current_time;
-  double elapsed_time;
 
   // Фиксируем время
   clock_gettime(CLOCK_MONOTONIC, &last_fall);
@@ -340,30 +340,52 @@ void game_loop(GameInfo_t *game_info, GameWindows *game_windows) {
     clock_gettime(CLOCK_MONOTONIC,
                   &current_time);  // Получаем текущее время
 
-    elapsed_time = get_elapsed_time(&last_fall, &current_time);
-    if (!game_info->pause && elapsed_time >= FALL_DELAY) {
-      if (is_collision_below(game_info)) {
-        stick_to_bottom(game_info);
-        if (has_full_rows(&game_info->field)) {
-          render_all(game_windows, game_info);
-          shift_rows(game_info);
-        }
-        generate_next_tetromino(game_info);
-      } else {
-        move_down(game_info);
-      }
-      clock_gettime(CLOCK_MONOTONIC, &last_fall);
-    }
+    handle_tetromino_fall(game_info, game_windows, &last_fall, &current_time);
 
-    ch = wgetch(game_windows->game_win);
-    if (ch != ERR) {
-      handle_user_input(ch, game_info, &last_fall, game_windows);
-    }
+    handle_input_if_any(game_info, game_windows, &last_fall);
 
-    if (is_game_over(game_info)) {
-      game_info->game_state = STATE_GAME_OVER;
-    }
+    check_game_over(game_info);
 
     render_all(game_windows, game_info);
+  }
+}
+
+void handle_state_playing(GameInfo_t *game_info, GameWindows *game_windows) {
+  render_all(game_windows, game_info);
+  game_loop(game_info, game_windows);
+}
+
+void handle_input_if_any(GameInfo_t *game_info, GameWindows *game_windows,
+                         struct timespec *last_fall) {
+  int ch = wgetch(game_windows->game_win);
+  if (ch != ERR) {
+    handle_user_input(ch, game_info, last_fall, game_windows);
+  }
+}
+
+void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
+                           struct timespec *last_fall,
+                           struct timespec *current_time) {
+  double elapsed_time = get_elapsed_time(last_fall, current_time);
+
+  if (!game_info->pause && elapsed_time >= FALL_DELAY) {
+    if (is_collision_below(game_info)) {
+      stick_to_bottom(game_info);
+      if (has_full_rows(&game_info->field)) {
+        render_all(game_windows, game_info);
+        shift_rows(game_info);
+      }
+      generate_next_tetromino(game_info);
+    } else {
+      move_down(game_info);
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, last_fall);
+  }
+}
+
+void check_game_over(GameInfo_t *game_info) {
+  if (is_game_over(game_info)) {
+    game_info->game_state = STATE_GAME_OVER;
   }
 }
