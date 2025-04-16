@@ -221,7 +221,7 @@ bool has_full_rows(GameField *field) {
 
 void shift_rows(GameInfo_t *game_info) {
   // перед удалением полной строки делаем паузу
-  // usleep(SHIFT_DELAY);
+  usleep(SHIFT_DELAY);
 
   for (int row = 0; row < FIELD_HEIGHT; row++) {
     if (is_full_row(&game_info->field, row)) {
@@ -265,8 +265,6 @@ void handle_user_input(int ch, GameInfo_t *game_info,
           stick_to_bottom(game_info);
           if (has_full_rows(&game_info->field)) {
             render_all(game_windows, game_info);
-
-            usleep(SHIFT_DELAY);
             shift_rows(game_info);
           }
           generate_next_tetromino(game_info);
@@ -383,6 +381,18 @@ void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
     clock_gettime(CLOCK_MONOTONIC, last_fall);
   }
 }
+// move_down(game_info);
+// if (is_collision_below(game_info)) {
+//   stick_to_bottom(game_info);
+//   if (has_full_rows(&game_info->field)) {
+//     render_all(game_windows, game_info);
+//     shift_rows(game_info);
+//   }
+//   generate_next_tetromino(game_info);
+// }
+// Обновляем last_fall, чтобы автоматическое падение не случилось сразу
+// после ручного
+// clock_gettime(CLOCK_MONOTONIC, last_fall);
 
 void check_game_over(GameInfo_t *game_info) {
   if (is_game_over(game_info)) {

@@ -11,7 +11,7 @@
 #define OFFSET_X ((getmaxx(stdscr) - WIN_WIDTH) / 2)
 
 #define FALL_DELAY 0.5          // задержка в 0.5 секунды
-#define SHIFT_DELAY 5 * 100000  // задержка в 0.5 секунды в микросекундах
+#define SHIFT_DELAY 3 * 100000  // задержка в 0.5 секунды в микросекундах
 
 typedef struct GameField {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
