@@ -259,19 +259,17 @@ void handle_user_input(int ch, GameInfo_t *game_info,
       break;
 
     case KEY_DOWN:
-      if (!game_info->pause) {
-        move_down(game_info);
-        if (is_collision_below(game_info)) {
-          stick_to_bottom(game_info);
-          if (has_full_rows(&game_info->field)) {
-            render_all(game_windows, game_info);
-            shift_rows(game_info);
-          }
-          generate_next_tetromino(game_info);
+      if (game_info->pause) {
+        return;
+      }
+      move_down(game_info);
+      if (is_collision_below(game_info)) {
+        stick_to_bottom(game_info);
+        if (has_full_rows(&game_info->field)) {
+          render_all(game_windows, game_info);
+          shift_rows(game_info);
         }
-        // Обновляем last_fall, чтобы автоматическое падение не случилось сразу
-        // после ручного
-        // clock_gettime(CLOCK_MONOTONIC, last_fall);
+        generate_next_tetromino(game_info);
       }
       break;
 
