@@ -243,22 +243,22 @@ void generate_next_tetromino(GameInfo_t *game_info) {
   game_info->next_tetromino = init_tetromino();
 }
 
-void handle_user_input(int ch, GameInfo_t *game_info,
+void handle_user_input(UserAction_t action, GameInfo_t *game_info,
                        struct timespec *last_fall, GameWindows *game_windows) {
-  switch (ch) {
-    case 'q':
+  switch (action) {
+    case Terminate:
       game_info->game_state = STATE_EXIT;
       break;
 
-    case 'p':
+    case Pause:
       game_info->pause = !game_info->pause;
       break;
 
-    case 's':
+    case Start:
       game_info->pause = !game_info->pause;  // дублирует 'p'
       break;
 
-    case KEY_DOWN:
+    case Down:
       if (game_info->pause) {
         return;
       }
@@ -266,20 +266,20 @@ void handle_user_input(int ch, GameInfo_t *game_info,
       handle_stick(game_info, game_windows);
       break;
 
-    case KEY_RIGHT:
+    case Right:
       if (!game_info->pause) move_right(game_info, 1);
       break;
 
-    case KEY_LEFT:
+    case Left:
       if (!game_info->pause) move_left(game_info, -1);
       break;
 
-    case KEY_UP:
+    case Action:
       if (!game_info->pause) rotate_tetromino(game_info);
       break;
 
     default:
-      // delete or save for enum of actions
+      // Ничего не делаем для неизвестных/неактуальных действий
       break;
   }
 }
@@ -334,9 +334,12 @@ void handle_state_playing(GameInfo_t *game_info, GameWindows *game_windows) {
 void handle_input_if_any(GameInfo_t *game_info, GameWindows *game_windows,
                          struct timespec *last_fall) {
   int ch = wgetch(game_windows->game_win);
-  if (ch != ERR) {
-    handle_user_input(ch, game_info, last_fall, game_windows);
-  }
+  if (ch == ERR) return;
+
+  UserAction_t action = map_key_to_action(ch);
+  if (action == -1) return;
+
+  handle_user_input(action, game_info, last_fall, game_windows);
 }
 
 void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
@@ -376,19 +379,52 @@ void check_game_over(GameInfo_t *game_info) {
 
 void handle_state_menu(GameInfo_t *game_info, GameWindows *game_windows) {
   render_menu(game_windows->menu_win);
+
   int ch = wgetch(game_windows->menu_win);
-  if (ch == 's' || ch == 'S') {
-    game_info->game_state = STATE_PLAYING;
-    werase(game_windows->menu_win);
-    wrefresh(game_windows->menu_win);
-  }
-  if (ch == 'q' || ch == 'Q') {
-    game_info->game_state = STATE_EXIT;
+  UserAction_t action = map_key_to_action(ch);
+  switch (action) {
+    case Start:
+      game_info->game_state = STATE_PLAYING;
+      werase(game_windows->menu_win);
+      wrefresh(game_windows->menu_win);
+      break;
+
+    case Terminate:
+      game_info->game_state = STATE_EXIT;
+      break;
+
+    default:
+      // Остальные действия не нужны в меню
+      break;
   }
 }
 
 void handle_state_game_over(GameInfo_t *game_info, GameWindows *game_windows) {
   render_game_over(game_windows);
-  sleep(5);
+  sleep(3);
   game_info->game_state = STATE_EXIT;
+}
+
+UserAction_t map_key_to_action(int ch) {
+  switch (ch) {
+    case 'q':
+    case 'Q':
+      return Terminate;
+    case 'p':
+    case 'P':
+      return Pause;
+    case 's':
+    case 'S':
+      return Start;
+    case KEY_LEFT:
+      return Left;
+    case KEY_RIGHT:
+      return Right;
+    case KEY_DOWN:
+      return Down;
+    case KEY_UP:
+      return Action;  // Вращение фигуры
+    default:
+      return -1;  // Неизвестная клавиша
+  }
 }

@@ -64,7 +64,6 @@ typedef enum UserAction_t {
   Terminate,
   Left,
   Right,
-  Up,
   Down,
   Action
 } UserAction_t;
@@ -121,7 +120,7 @@ bool is_full_row(GameField *field, int row);
 bool has_full_rows(GameField *field);
 void shift_rows(GameInfo_t *game_info);
 
-void handle_user_input(int ch, GameInfo_t *game_info,
+void handle_user_input(UserAction_t action, GameInfo_t *game_info,
                        struct timespec *last_fall, GameWindows *game_windows);
 
 // playing cycle for STATE_PLAYING
@@ -146,3 +145,4 @@ bool handle_stick(GameInfo_t *game_info, GameWindows *game_windows);
 void handle_state_menu(GameInfo_t *game_info, GameWindows *game_windows);
 
 void handle_state_game_over(GameInfo_t *game_info, GameWindows *game_windows);
+UserAction_t map_key_to_action(int ch);
