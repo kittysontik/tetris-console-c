@@ -32,7 +32,7 @@ Tetromino init_tetromino() {
       {{-1, 1}, {0, 1}, {-2, 0}, {-1, 0}},  // TETROMINO_Z
   };
 
-  const int(*shape)[2] = shapes[t.type];  // двумерный массив
+  const int (*shape)[2] = shapes[t.type];  // двумерный массив
   int min_y = get_min_y_from_tetromino(shape);
 
   for (int i = 0; i < 4; i++) {
@@ -64,6 +64,8 @@ GameInfo_t init_game_info() {
   game_info.field = init_field();
   game_info.current_tetromino = init_tetromino();
   game_info.next_tetromino = init_tetromino();
+
+  game_info.game_state = STATE_MENU;
 
   return game_info;
 }
@@ -241,16 +243,19 @@ void generate_next_tetromino(GameInfo_t *game_info) {
   game_info->next_tetromino = init_tetromino();
 }
 
-bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
-                       struct timespec current_time,
-                       GameWindows *game_windows) {
+void handle_user_input(int ch, GameInfo_t *game_info,
+                       struct timespec *last_fall, GameWindows *game_windows) {
   switch (ch) {
     case 'q':
-      return false;
+      game_info->game_state = STATE_EXIT;
       break;
 
     case 'p':
       game_info->pause = !game_info->pause;
+      break;
+
+    case 's':
+      game_info->pause = !game_info->pause;  // дублирует 'p'
       break;
 
     case KEY_DOWN:
@@ -266,7 +271,7 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
           }
           generate_next_tetromino(game_info);
         }
-        clock_gettime(CLOCK_MONOTONIC, &last_fall);
+        clock_gettime(CLOCK_MONOTONIC, last_fall);
       }
       break;
 
@@ -281,34 +286,61 @@ bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
     case KEY_UP:
       if (!game_info->pause) rotate_tetromino(game_info);
       break;
-  }
 
-  return true;
+    default:
+      // delete or save for enum of actions
+      break;
+  }
+}
+
+void run_game_state_machine(GameInfo_t *game_info, GameWindows *game_windows) {
+  int ch;
+
+  while (game_info->game_state != STATE_EXIT) {
+    switch (game_info->game_state) {
+      case STATE_MENU:
+        render_menu(game_windows->menu_win);
+        ch = wgetch(game_windows->menu_win);
+        if (ch == 's' || ch == 'S') {
+          game_info->game_state = STATE_PLAYING;
+          werase(game_windows->menu_win);
+          wrefresh(game_windows->menu_win);
+        } else if (ch == 'q' || ch == 'Q') {
+          game_info->game_state = STATE_EXIT;
+        }
+
+        break;
+
+      case STATE_PLAYING:
+        game_loop(game_info, game_windows);
+        break;
+
+      case STATE_GAME_OVER:
+        render_game_over(game_windows);
+        sleep(3);
+        game_info->game_state = STATE_EXIT;
+        break;
+
+      default:
+        game_info->game_state = STATE_EXIT;
+        break;
+    }
+  }
 }
 
 void game_loop(GameInfo_t *game_info, GameWindows *game_windows) {
-  struct timespec last_fall, current_time;
   int ch;
-  bool running = false;
+  struct timespec last_fall, current_time;
+  double elapsed_time;
 
-  render_menu(game_windows->menu_win);
-  ch = wgetch(game_windows->menu_win);
-  if (ch == 's' || ch == 'S') {
-    running = true;
-  }
-  werase(game_windows->menu_win);
-  wrefresh(game_windows->menu_win);
-
-  render_all(game_windows, game_info);
   // Фиксируем время
   clock_gettime(CLOCK_MONOTONIC, &last_fall);
 
-  while (running) {
-    clock_gettime(CLOCK_MONOTONIC, &current_time);  // Получаем текущее время
+  while (game_info->game_state == STATE_PLAYING) {
+    clock_gettime(CLOCK_MONOTONIC,
+                  &current_time);  // Получаем текущее время
 
-    // Считаем, сколько времени прошло с последнего зафиксированного момента
-    double elapsed_time = get_elapsed_time(&last_fall, &current_time);
-
+    elapsed_time = get_elapsed_time(&last_fall, &current_time);
     if (!game_info->pause && elapsed_time >= FALL_DELAY) {
       if (is_collision_below(game_info)) {
         stick_to_bottom(game_info);
@@ -324,13 +356,12 @@ void game_loop(GameInfo_t *game_info, GameWindows *game_windows) {
     }
 
     ch = wgetch(game_windows->game_win);
-    running =
-        handle_user_input(ch, game_info, last_fall, current_time, game_windows);
+    if (ch != ERR) {
+      handle_user_input(ch, game_info, &last_fall, game_windows);
+    }
 
     if (is_game_over(game_info)) {
-      render_game_over(game_windows);
-      sleep(5);
-      running = false;
+      game_info->game_state = STATE_GAME_OVER;
     }
 
     render_all(game_windows, game_info);

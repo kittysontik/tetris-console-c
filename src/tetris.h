@@ -37,6 +37,14 @@ typedef struct Tetromino {
   TetrominoType type;
 } Tetromino;
 
+typedef enum GameState {
+  STATE_MENU,
+  STATE_PLAYING,
+  STATE_PAUSED,
+  STATE_GAME_OVER,
+  STATE_EXIT
+} GameState;
+
 typedef struct GameInfo_t {
   GameField field;
   Tetromino current_tetromino;
@@ -47,6 +55,8 @@ typedef struct GameInfo_t {
   int level;
   int speed;
   int pause;
+
+  GameState game_state;
 } GameInfo_t;
 
 typedef struct GameWindows {
@@ -100,8 +110,11 @@ bool is_full_row(GameField *field, int row);
 bool has_full_rows(GameField *field);
 void shift_rows(GameInfo_t *game_info);
 
-bool handle_user_input(int ch, GameInfo_t *game_info, struct timespec last_fall,
-                       struct timespec current_time, GameWindows *game_windows);
+void handle_user_input(int ch, GameInfo_t *game_info,
+                       struct timespec *last_fall, GameWindows *game_windows);
 
-// main loop of game
+// playing cycle for STATE_PLAYING
 void game_loop(GameInfo_t *game_info, GameWindows *game_windows);
+
+// states of finite state machine for tetris
+void run_game_state_machine(GameInfo_t *game_info, GameWindows *game_windows);

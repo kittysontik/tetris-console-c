@@ -11,8 +11,8 @@ int main(void) {
 
   // render_all(&game_windows, &game_info);
 
-  game_loop(&game_info, &game_windows);
-
+  run_game_state_machine(&game_info, &game_windows);
+  // destroy_game_windows(&game_windows);
   endwin();
   return 0;
 }
