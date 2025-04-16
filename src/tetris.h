@@ -11,7 +11,7 @@
 #define OFFSET_X ((getmaxx(stdscr) - WIN_WIDTH) / 2)
 
 #define FALL_DELAY 0.5          // задержка в 0.5 секунды
-#define SHIFT_DELAY 3 * 100000  // задержка в 0.5 секунды в микросекундах
+#define SHIFT_DELAY 3 * 100000  // задержка в 0.3 секунды в микросекундах
 
 typedef struct GameField {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
@@ -40,7 +40,6 @@ typedef struct Tetromino {
 typedef enum GameState {
   STATE_MENU,
   STATE_PLAYING,
-  STATE_PAUSED,
   STATE_GAME_OVER,
   STATE_EXIT
 } GameState;
@@ -59,6 +58,17 @@ typedef struct GameInfo_t {
   GameState game_state;
 } GameInfo_t;
 
+typedef enum UserAction_t {
+  Start,
+  Pause,
+  Terminate,
+  Left,
+  Right,
+  Up,
+  Down,
+  Action
+} UserAction_t;
+
 typedef struct GameWindows {
   WINDOW *menu_win;
   WINDOW *game_win;
@@ -70,6 +80,7 @@ typedef struct GameWindows {
 // frontend
 GameWindows init_windows();
 void init_ncurses(GameWindows *game_windows);
+void delete_windows(GameWindows *game_windows);
 
 void draw_field(GameInfo_t *game_info, GameWindows *game_windows);
 void draw_tetromino(Tetromino *t, WINDOW *win);
@@ -131,3 +142,7 @@ void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
 void check_game_over(GameInfo_t *game_info);
 
 bool handle_stick(GameInfo_t *game_info, GameWindows *game_windows);
+
+void handle_state_menu(GameInfo_t *game_info, GameWindows *game_windows);
+
+void handle_state_game_over(GameInfo_t *game_info, GameWindows *game_windows);

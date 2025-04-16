@@ -285,21 +285,10 @@ void handle_user_input(int ch, GameInfo_t *game_info,
 }
 
 void run_game_state_machine(GameInfo_t *game_info, GameWindows *game_windows) {
-  int ch;
-
   while (game_info->game_state != STATE_EXIT) {
     switch (game_info->game_state) {
       case STATE_MENU:
-        render_menu(game_windows->menu_win);
-        ch = wgetch(game_windows->menu_win);
-        if (ch == 's' || ch == 'S') {
-          game_info->game_state = STATE_PLAYING;
-          werase(game_windows->menu_win);
-          wrefresh(game_windows->menu_win);
-        } else if (ch == 'q' || ch == 'Q') {
-          game_info->game_state = STATE_EXIT;
-        }
-
+        handle_state_menu(game_info, game_windows);
         break;
 
       case STATE_PLAYING:
@@ -307,9 +296,7 @@ void run_game_state_machine(GameInfo_t *game_info, GameWindows *game_windows) {
         break;
 
       case STATE_GAME_OVER:
-        render_game_over(game_windows);
-        sleep(5);
-        game_info->game_state = STATE_EXIT;
+        handle_state_game_over(game_info, game_windows);
         break;
 
       default:
@@ -385,4 +372,23 @@ void check_game_over(GameInfo_t *game_info) {
   if (is_game_over(game_info)) {
     game_info->game_state = STATE_GAME_OVER;
   }
+}
+
+void handle_state_menu(GameInfo_t *game_info, GameWindows *game_windows) {
+  render_menu(game_windows->menu_win);
+  int ch = wgetch(game_windows->menu_win);
+  if (ch == 's' || ch == 'S') {
+    game_info->game_state = STATE_PLAYING;
+    werase(game_windows->menu_win);
+    wrefresh(game_windows->menu_win);
+  }
+  if (ch == 'q' || ch == 'Q') {
+    game_info->game_state = STATE_EXIT;
+  }
+}
+
+void handle_state_game_over(GameInfo_t *game_info, GameWindows *game_windows) {
+  render_game_over(game_windows);
+  sleep(5);
+  game_info->game_state = STATE_EXIT;
 }

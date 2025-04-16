@@ -11,6 +11,7 @@ int main(void) {
 
   run_game_state_machine(&game_info, &game_windows);
 
+  delete_windows(&game_windows);
   endwin();
   return 0;
 }

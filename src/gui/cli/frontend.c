@@ -123,3 +123,10 @@ GameWindows init_windows() {
 
   return game_windows;
 }
+
+void delete_windows(GameWindows *game_windows) {
+  delwin(game_windows->borders_win);
+  delwin(game_windows->game_win);
+  delwin(game_windows->menu_win);
+  delwin(game_windows->next_win);
+}
