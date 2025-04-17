@@ -67,6 +67,10 @@ GameInfo_t init_game_info() {
 
   game_info.game_state = STATE_MENU;
 
+  // обнуляем таймер
+  game_info.last_fall.tv_sec = 0;
+  game_info.last_fall.tv_nsec = 0;
+
   return game_info;
 }
 
@@ -244,7 +248,7 @@ void generate_next_tetromino(GameInfo_t *game_info) {
 }
 
 void handle_user_input(UserAction_t action, GameInfo_t *game_info,
-                       struct timespec *last_fall, GameWindows *game_windows) {
+                       GameWindows *game_windows) {
   switch (action) {
     case Terminate:
       game_info->game_state = STATE_EXIT;
@@ -284,7 +288,7 @@ void handle_user_input(UserAction_t action, GameInfo_t *game_info,
   }
 }
 
-void run_game_state_machine(GameInfo_t *game_info, GameWindows *game_windows) {
+void run_game_fsm(GameInfo_t *game_info, GameWindows *game_windows) {
   while (game_info->game_state != STATE_EXIT) {
     switch (game_info->game_state) {
       case STATE_MENU:
@@ -306,46 +310,24 @@ void run_game_state_machine(GameInfo_t *game_info, GameWindows *game_windows) {
   }
 }
 
-void game_loop(GameInfo_t *game_info, GameWindows *game_windows) {
-  struct timespec last_fall, current_time;
-
-  // Фиксируем время
-  clock_gettime(CLOCK_MONOTONIC, &last_fall);
-
-  while (game_info->game_state == STATE_PLAYING) {
-    clock_gettime(CLOCK_MONOTONIC,
-                  &current_time);  // Получаем текущее время
-
-    handle_tetromino_fall(game_info, game_windows, &last_fall, &current_time);
-
-    handle_input_if_any(game_info, game_windows, &last_fall);
-
-    check_game_over(game_info);
-
-    render_all(game_windows, game_info);
-  }
-}
-
 void handle_state_playing(GameInfo_t *game_info, GameWindows *game_windows) {
+  *game_info = update_current_state(game_info, game_windows);
   render_all(game_windows, game_info);
-  game_loop(game_info, game_windows);
 }
 
-void handle_input_if_any(GameInfo_t *game_info, GameWindows *game_windows,
-                         struct timespec *last_fall) {
+void handle_input_if_any(GameInfo_t *game_info, GameWindows *game_windows) {
   int ch = wgetch(game_windows->game_win);
   if (ch == ERR) return;
 
   UserAction_t action = map_key_to_action(ch);
   if (action == -1) return;
 
-  handle_user_input(action, game_info, last_fall, game_windows);
+  handle_user_input(action, game_info, game_windows);
 }
 
 void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
-                           struct timespec *last_fall,
                            struct timespec *current_time) {
-  double elapsed_time = get_elapsed_time(last_fall, current_time);
+  double elapsed_time = get_elapsed_time(&game_info->last_fall, current_time);
 
   if (!game_info->pause && elapsed_time >= FALL_DELAY) {
     bool is_stick_success = handle_stick(game_info, game_windows);
@@ -353,7 +335,7 @@ void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
       move_down(game_info);
     }
     // сбрасываем таймер
-    clock_gettime(CLOCK_MONOTONIC, last_fall);
+    clock_gettime(CLOCK_MONOTONIC, &game_info->last_fall);
   }
 }
 
@@ -384,6 +366,8 @@ void handle_state_menu(GameInfo_t *game_info, GameWindows *game_windows) {
   UserAction_t action = map_key_to_action(ch);
   switch (action) {
     case Start:
+      // Фиксируем время перед началом игры
+      clock_gettime(CLOCK_MONOTONIC, &game_info->last_fall);
       game_info->game_state = STATE_PLAYING;
       werase(game_windows->menu_win);
       wrefresh(game_windows->menu_win);
@@ -408,13 +392,10 @@ void handle_state_game_over(GameInfo_t *game_info, GameWindows *game_windows) {
 UserAction_t map_key_to_action(int ch) {
   switch (ch) {
     case 'q':
-    case 'Q':
       return Terminate;
     case 'p':
-    case 'P':
       return Pause;
     case 's':
-    case 'S':
       return Start;
     case KEY_LEFT:
       return Left;
@@ -427,4 +408,22 @@ UserAction_t map_key_to_action(int ch) {
     default:
       return -1;  // Неизвестная клавиша
   }
+}
+
+GameInfo_t update_current_state(GameInfo_t *game_info,
+                                GameWindows *game_windows) {
+  if (game_info->game_state != STATE_PLAYING) {
+    return *game_info;
+  }
+  struct timespec current_time;
+  // Получаем текущее время
+  clock_gettime(CLOCK_MONOTONIC, &current_time);
+
+  handle_tetromino_fall(game_info, game_windows, &current_time);
+
+  handle_input_if_any(game_info, game_windows);
+
+  check_game_over(game_info);
+
+  return *game_info;
 }

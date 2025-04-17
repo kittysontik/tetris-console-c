@@ -9,7 +9,7 @@ int main(void) {
 
   GameInfo_t game_info = init_game_info();
 
-  run_game_state_machine(&game_info, &game_windows);
+  run_game_fsm(&game_info, &game_windows);
 
   delete_windows(&game_windows);
   endwin();
