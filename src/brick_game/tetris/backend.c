@@ -283,7 +283,7 @@ void handle_user_input(UserAction_t action, GameInfo_t *game_info,
       break;
 
     default:
-      // Ничего не делаем для неизвестных/неактуальных действий
+      // Ничего не делаем для неизвестных действий
       break;
   }
 }

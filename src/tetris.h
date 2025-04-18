@@ -1,3 +1,5 @@
+
+#include <locale.h>
 #include <ncurses.h>
 #include <stdlib.h>
 #include <time.h>
@@ -12,6 +14,8 @@
 
 #define FALL_DELAY 0.5          // задержка в 0.5 секунды
 #define SHIFT_DELAY 3 * 100000  // задержка в 0.3 секунды в микросекундах
+
+#define BLOCK_SYMBOL "\u2591"
 
 typedef struct GameField {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];

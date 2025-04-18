@@ -24,7 +24,7 @@ void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
   for (int y = 0; y < FIELD_HEIGHT; y++) {
     for (int x = 0; x < FIELD_WIDTH; x++) {
       if (game_info->field.cells[y][x] == 1) {
-        mvwprintw(game_windows->game_win, y, x, "#");
+        mvwprintw(game_windows->game_win, y, x, BLOCK_SYMBOL);
       } else {
         mvwprintw(game_windows->game_win, y, x, " ");
       }
@@ -36,7 +36,7 @@ void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
 void draw_tetromino(Tetromino *t, WINDOW *win) {
   wattron(win, COLOR_PAIR(2));
   for (int i = 0; i < 4; i++) {
-    mvwprintw(win, t->blocks[i].y, t->blocks[i].x, "#");
+    mvwprintw(win, t->blocks[i].y, t->blocks[i].x, BLOCK_SYMBOL);
   }
   wattroff(win, COLOR_PAIR(2));
 }
@@ -44,7 +44,7 @@ void draw_tetromino(Tetromino *t, WINDOW *win) {
 void draw_next_tetromino(Tetromino *t, WINDOW *win) {
   wattron(win, COLOR_PAIR(2));
   for (int i = 0; i < 4; i++) {
-    mvwprintw(win, t->blocks[i].y + 2, t->blocks[i].x - 1, "#");
+    mvwprintw(win, t->blocks[i].y + 2, t->blocks[i].x - 1, BLOCK_SYMBOL);
   }
   wattroff(win, COLOR_PAIR(2));
 }

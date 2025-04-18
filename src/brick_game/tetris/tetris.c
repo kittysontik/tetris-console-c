@@ -1,6 +1,9 @@
 #include "../../tetris.h"
 
+
 int main(void) {
+  setlocale(LC_ALL, "");
+
   initscr();
 
   GameWindows game_windows = init_windows();
