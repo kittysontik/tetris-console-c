@@ -15,7 +15,7 @@
 #define FALL_DELAY 0.5          // задержка в 0.5 секунды
 #define SHIFT_DELAY 3 * 100000  // задержка в 0.3 секунды в микросекундах
 
-#define BLOCK_SYMBOL "\u2591"
+#define BLOCK_SYMBOL "\u2592"
 #define EMPTY_SYMBOL "  "
 
 typedef struct GameField {

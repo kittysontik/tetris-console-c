@@ -1,8 +1,8 @@
 #include "../../tetris.h"
 
 void init_colors() {
-  init_pair(1, COLOR_MAGENTA, COLOR_BLACK);
-  init_pair(2, COLOR_GREEN, COLOR_BLACK);
+  init_pair(1, COLOR_YELLOW, COLOR_BLACK);
+  init_pair(2, COLOR_CYAN, COLOR_BLACK);
 }
 
 void init_ncurses(GameWindows *game_windows) {
@@ -85,9 +85,9 @@ void render_game_over(GameWindows *game_windows) {
   werase(game_windows->next_win);
   werase(game_windows->borders_win);
 
-  wattron(game_windows->menu_win, COLOR_PAIR(2));
+  wattron(game_windows->menu_win, COLOR_PAIR(1));
   mvwprintw(game_windows->menu_win, FIELD_HEIGHT / 2, 3, "Game Over");
-  wattroff(game_windows->menu_win, COLOR_PAIR(2));
+  wattroff(game_windows->menu_win, COLOR_PAIR(1));
 
   wrefresh(game_windows->game_win);
   wrefresh(game_windows->next_win);
@@ -96,13 +96,13 @@ void render_game_over(GameWindows *game_windows) {
 }
 
 void render_menu(WINDOW *win) {
-  wattron(win, COLOR_PAIR(2));
+  wattron(win, COLOR_PAIR(1));
   mvwprintw(win, 6, 4, "TETRIS");
   mvwprintw(win, 8, 1, "Start: s");
   mvwprintw(win, 9, 1, "Pause: p");
   mvwprintw(win, 10, 1, "Quit: q");
   mvwprintw(win, 11, 1, "Move: arrow keys");
-  wattroff(win, COLOR_PAIR(2));
+  wattroff(win, COLOR_PAIR(1));
 
   wrefresh(win);
 }
