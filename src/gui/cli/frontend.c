@@ -23,10 +23,11 @@ void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
   wattron(game_windows->game_win, COLOR_PAIR(1));
   for (int y = 0; y < FIELD_HEIGHT; y++) {
     for (int x = 0; x < FIELD_WIDTH; x++) {
+      int draw_x = x * 2;
       if (game_info->field.cells[y][x] == 1) {
-        mvwprintw(game_windows->game_win, y, x, BLOCK_SYMBOL);
+        mvwprintw(game_windows->game_win, y, draw_x, BLOCK_SYMBOL BLOCK_SYMBOL);
       } else {
-        mvwprintw(game_windows->game_win, y, x, " ");
+        mvwprintw(game_windows->game_win, y, draw_x, "  ");
       }
     }
   }
@@ -36,7 +37,9 @@ void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
 void draw_tetromino(Tetromino *t, WINDOW *win) {
   wattron(win, COLOR_PAIR(2));
   for (int i = 0; i < 4; i++) {
-    mvwprintw(win, t->blocks[i].y, t->blocks[i].x, BLOCK_SYMBOL);
+    int draw_x = t->blocks[i].x * 2;
+    int draw_y = t->blocks[i].y;
+    mvwprintw(win, draw_y, draw_x, BLOCK_SYMBOL BLOCK_SYMBOL);
   }
   wattroff(win, COLOR_PAIR(2));
 }
@@ -44,7 +47,9 @@ void draw_tetromino(Tetromino *t, WINDOW *win) {
 void draw_next_tetromino(Tetromino *t, WINDOW *win) {
   wattron(win, COLOR_PAIR(2));
   for (int i = 0; i < 4; i++) {
-    mvwprintw(win, t->blocks[i].y + 2, t->blocks[i].x - 1, BLOCK_SYMBOL);
+    int draw_x = t->blocks[i].x * 2 - 5;
+    int draw_y = t->blocks[i].y + 2;
+    mvwprintw(win, draw_y, draw_x, BLOCK_SYMBOL BLOCK_SYMBOL);
   }
   wattroff(win, COLOR_PAIR(2));
 }
@@ -81,7 +86,7 @@ void render_game_over(GameWindows *game_windows) {
   werase(game_windows->borders_win);
 
   wattron(game_windows->menu_win, COLOR_PAIR(2));
-  mvwprintw(game_windows->menu_win, FIELD_HEIGHT / 2, 2, "Game Over");
+  mvwprintw(game_windows->menu_win, FIELD_HEIGHT / 2, 3, "Game Over");
   wattroff(game_windows->menu_win, COLOR_PAIR(2));
 
   wrefresh(game_windows->game_win);
@@ -92,11 +97,11 @@ void render_game_over(GameWindows *game_windows) {
 
 void render_menu(WINDOW *win) {
   wattron(win, COLOR_PAIR(2));
-  mvwprintw(win, 6, 3, "TETRIS");
-  mvwprintw(win, 8, 0, "Start: s");
-  mvwprintw(win, 9, 0, "Pause: p");
-  mvwprintw(win, 10, 0, "Quit: q");
-  mvwprintw(win, 11, 0, "Move: arrow keys");
+  mvwprintw(win, 6, 4, "TETRIS");
+  mvwprintw(win, 8, 1, "Start: s");
+  mvwprintw(win, 9, 1, "Pause: p");
+  mvwprintw(win, 10, 1, "Quit: q");
+  mvwprintw(win, 11, 1, "Move: arrow keys");
   wattroff(win, COLOR_PAIR(2));
 
   wrefresh(win);
@@ -105,7 +110,7 @@ void render_menu(WINDOW *win) {
 void draw_next_win(GameWindows *game_windows) {
   wattron(game_windows->next_win, COLOR_PAIR(1));
   box(game_windows->next_win, 0, 0);
-  mvwprintw(game_windows->next_win, 0, 2, "Next");
+  mvwprintw(game_windows->next_win, 0, 3, "Next");
   wattroff(game_windows->next_win, COLOR_PAIR(1));
 }
 
@@ -118,8 +123,8 @@ GameWindows init_windows() {
   game_windows.menu_win = newwin(WIN_HEIGHT, WIN_HEIGHT, offset_y, offset_x);
   game_windows.borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, offset_y, offset_x);
   game_windows.game_win =
-      newwin(FIELD_HEIGHT, FIELD_WIDTH, offset_y + 1, offset_x + 1);
-  game_windows.next_win = newwin(6, 8, offset_y + 7, WIN_WIDTH + offset_x + 1);
+      newwin(FIELD_HEIGHT, FIELD_WIDTH * 2, offset_y + 1, offset_x + 1);
+  game_windows.next_win = newwin(5, 10, offset_y + 7, offset_x + WIN_WIDTH + 1);
 
   return game_windows;
 }

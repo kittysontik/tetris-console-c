@@ -8,7 +8,7 @@
 #define FIELD_HEIGHT 20
 #define FIELD_WIDTH 10
 #define WIN_HEIGHT 22
-#define WIN_WIDTH 12
+#define WIN_WIDTH (FIELD_WIDTH * 2 + 2)
 #define OFFSET_Y ((getmaxy(stdscr) - WIN_HEIGHT) / 2)
 #define OFFSET_X ((getmaxx(stdscr) - WIN_WIDTH) / 2)
 
@@ -16,6 +16,7 @@
 #define SHIFT_DELAY 3 * 100000  // задержка в 0.3 секунды в микросекундах
 
 #define BLOCK_SYMBOL "\u2591"
+#define EMPTY_SYMBOL "  "
 
 typedef struct GameField {
   int cells[FIELD_HEIGHT][FIELD_WIDTH];
