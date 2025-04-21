@@ -80,6 +80,8 @@ typedef struct GameWindows {
   WINDOW *game_win;
   WINDOW *borders_win;
   WINDOW *next_win;
+  WINDOW *score_win;
+  WINDOW *highscore_win;
 
 } GameWindows;
 
@@ -96,6 +98,8 @@ void render_all(GameWindows *game_windows, GameInfo_t *game_info);
 void render_game_over(GameWindows *game_windows);
 void draw_next_win(GameWindows *game_windows);
 void render_menu(WINDOW *win);
+void draw_score_win(GameWindows *game_windows, int score);
+void draw_highscore_win(GameWindows *game_windows, int highscore);
 
 // backend
 Tetromino init_tetromino();
@@ -129,6 +133,7 @@ int clear_full_lines(GameInfo_t *game_info);
 int load_high_score();
 void save_high_score(int score);
 void handle_full_lines(GameInfo_t *game_info);
+int calculate_score(int cleared_lines);
 
 void handle_user_input(UserAction_t action, GameInfo_t *game_info,
                        GameWindows *game_windows);

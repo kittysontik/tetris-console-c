@@ -19,6 +19,29 @@ void init_ncurses(GameWindows *game_windows) {
   init_colors();
 }
 
+GameWindows init_windows() {
+  int offset_y = OFFSET_Y;
+  int offset_x = OFFSET_X;
+
+  GameWindows game_windows;
+
+  game_windows.menu_win = newwin(WIN_HEIGHT, WIN_HEIGHT, offset_y, offset_x);
+  game_windows.borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, offset_y, offset_x);
+
+  game_windows.game_win =
+      newwin(FIELD_HEIGHT, FIELD_WIDTH * 2, offset_y + 1, offset_x + 1);
+
+  int right_x = offset_x + WIN_WIDTH + 1;
+
+  game_windows.next_win = newwin(5, 10, offset_y + 3, right_x);
+
+  game_windows.score_win = newwin(5, 10, offset_y + 8, right_x);
+
+  game_windows.highscore_win = newwin(5, 10, offset_y + 13, right_x);
+
+  return game_windows;
+}
+
 void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
   wattron(game_windows->game_win, COLOR_PAIR(1));
   for (int y = 0; y < FIELD_HEIGHT; y++) {
@@ -66,6 +89,8 @@ void render_all(GameWindows *game_windows, GameInfo_t *game_info) {
 
   draw_box(game_windows->borders_win);
   draw_next_win(game_windows);
+  draw_score_win(game_windows, game_info->score);
+  draw_highscore_win(game_windows, game_info->high_score);
   draw_field(game_info, game_windows);
   draw_tetromino(&game_info->current_tetromino, game_windows->game_win);
   draw_next_tetromino(&game_info->next_tetromino, game_windows->next_win);
@@ -74,7 +99,8 @@ void render_all(GameWindows *game_windows, GameInfo_t *game_info) {
   wnoutrefresh(game_windows->borders_win);
   wnoutrefresh(game_windows->game_win);
   wnoutrefresh(game_windows->next_win);
-  // wnoutrefresh(game_windows->menu_win);
+  wnoutrefresh(game_windows->score_win);
+  wnoutrefresh(game_windows->highscore_win);
 
   // Обновляем все окна
   doupdate();
@@ -84,24 +110,28 @@ void render_game_over(GameWindows *game_windows) {
   werase(game_windows->game_win);
   werase(game_windows->next_win);
   werase(game_windows->borders_win);
+  werase(game_windows->highscore_win);
+  werase(game_windows->score_win);
 
   wattron(game_windows->menu_win, COLOR_PAIR(1));
-  mvwprintw(game_windows->menu_win, FIELD_HEIGHT / 2, 3, "Game Over");
+  mvwprintw(game_windows->menu_win, FIELD_HEIGHT / 2, 3, "GAME OVER");
   wattroff(game_windows->menu_win, COLOR_PAIR(1));
 
   wrefresh(game_windows->game_win);
   wrefresh(game_windows->next_win);
   wrefresh(game_windows->borders_win);
   wrefresh(game_windows->menu_win);
+  wrefresh(game_windows->highscore_win);
+  wrefresh(game_windows->score_win);
 }
 
 void render_menu(WINDOW *win) {
   wattron(win, COLOR_PAIR(1));
   mvwprintw(win, 6, 4, "TETRIS");
-  mvwprintw(win, 8, 1, "Start: s");
-  mvwprintw(win, 9, 1, "Pause: p");
-  mvwprintw(win, 10, 1, "Quit: q");
-  mvwprintw(win, 11, 1, "Move: arrow keys");
+  mvwprintw(win, 8, 1, "START: s");
+  mvwprintw(win, 9, 1, "PAUSE: p");
+  mvwprintw(win, 10, 1, "QUIT: q");
+  mvwprintw(win, 11, 1, "MOVE: ARROW KEYS");
   wattroff(win, COLOR_PAIR(1));
 
   wrefresh(win);
@@ -110,23 +140,24 @@ void render_menu(WINDOW *win) {
 void draw_next_win(GameWindows *game_windows) {
   wattron(game_windows->next_win, COLOR_PAIR(1));
   box(game_windows->next_win, 0, 0);
-  mvwprintw(game_windows->next_win, 0, 3, "Next");
+  mvwprintw(game_windows->next_win, 0, 2, "NEXT");
   wattroff(game_windows->next_win, COLOR_PAIR(1));
 }
 
-GameWindows init_windows() {
-  int offset_y = OFFSET_Y;
-  int offset_x = OFFSET_X;
+void draw_score_win(GameWindows *game_windows, int score) {
+  wattron(game_windows->score_win, COLOR_PAIR(1));
+  box(game_windows->score_win, 0, 0);
+  mvwprintw(game_windows->score_win, 0, 2, "SCORE");
+  mvwprintw(game_windows->score_win, 2, 4, "%d", score);
+  wattroff(game_windows->score_win, COLOR_PAIR(1));
+}
 
-  GameWindows game_windows;
-
-  game_windows.menu_win = newwin(WIN_HEIGHT, WIN_HEIGHT, offset_y, offset_x);
-  game_windows.borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, offset_y, offset_x);
-  game_windows.game_win =
-      newwin(FIELD_HEIGHT, FIELD_WIDTH * 2, offset_y + 1, offset_x + 1);
-  game_windows.next_win = newwin(5, 10, offset_y + 7, offset_x + WIN_WIDTH + 1);
-
-  return game_windows;
+void draw_highscore_win(GameWindows *game_windows, int highscore) {
+  wattron(game_windows->highscore_win, COLOR_PAIR(1));
+  box(game_windows->highscore_win, 0, 0);
+  mvwprintw(game_windows->highscore_win, 0, 1, "HIGHSCORE");
+  mvwprintw(game_windows->highscore_win, 2, 3, "%d", highscore);
+  wattroff(game_windows->highscore_win, COLOR_PAIR(1));
 }
 
 void delete_windows(GameWindows *game_windows) {
