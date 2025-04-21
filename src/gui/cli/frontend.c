@@ -148,7 +148,7 @@ void draw_score_win(GameWindows *game_windows, int score) {
   wattron(game_windows->score_win, COLOR_PAIR(1));
   box(game_windows->score_win, 0, 0);
   mvwprintw(game_windows->score_win, 0, 2, "SCORE");
-  mvwprintw(game_windows->score_win, 2, 4, "%d", score);
+  mvwprintw(game_windows->score_win, 2, 3, "%d", score);
   wattroff(game_windows->score_win, COLOR_PAIR(1));
 }
 
