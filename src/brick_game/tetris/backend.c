@@ -52,11 +52,21 @@ GameField init_field() {
   return field;
 }
 
+int load_high_score() {
+  FILE *file = fopen("highscore.txt", "r");
+  int score = 0;
+  if (file) {
+    fscanf(file, "%d", &score);
+    fclose(file);
+  }
+  return score;
+}
+
 GameInfo_t init_game_info() {
   GameInfo_t game_info;
 
   game_info.score = 0;
-  game_info.high_score = 0;
+  game_info.high_score = load_high_score();
   game_info.pause = 0;
   game_info.speed = 0;
   game_info.level = 0;
@@ -223,12 +233,14 @@ bool has_full_rows(GameField *field) {
   return false;
 }
 
-void shift_rows(GameInfo_t *game_info) {
+int clear_full_lines(GameInfo_t *game_info) {
+  int cleared_lines = 0;
   // перед удалением полной строки делаем паузу
   usleep(SHIFT_DELAY);
 
   for (int row = 0; row < FIELD_HEIGHT; row++) {
     if (is_full_row(&game_info->field, row)) {
+      cleared_lines++;
       for (int k = row; k > 0; k--) {            // rows
         for (int j = 0; j < FIELD_WIDTH; j++) {  // columns
           game_info->field.cells[k][j] = game_info->field.cells[k - 1][j];
@@ -239,6 +251,40 @@ void shift_rows(GameInfo_t *game_info) {
       }
       row--;
     }
+  }
+  return cleared_lines;
+}
+
+void save_high_score(int score) {
+  FILE *file = fopen("highscore.txt", "w");
+  if (file) {
+    fprintf(file, "%d", score);
+    fclose(file);
+  }
+}
+
+int calculate_score(int cleared_lines) {
+  switch (cleared_lines) {
+    case 1:
+      return 100;
+    case 2:
+      return 300;
+    case 3:
+      return 700;
+    case 4:
+      return 1500;
+    default:
+      return 0;
+  }
+}
+
+void handle_full_lines(GameInfo_t *game_info) {
+  int lines = clear_full_lines(game_info);
+  int gained = calculate_score(lines);
+  game_info->score += gained;
+
+  if (game_info->score > game_info->high_score) {
+    game_info->high_score = game_info->score;
   }
 }
 
@@ -271,15 +317,21 @@ void handle_user_input(UserAction_t action, GameInfo_t *game_info,
       break;
 
     case Right:
-      if (!game_info->pause) move_right(game_info, 1);
+      if (!game_info->pause) {
+        move_right(game_info, 1);
+      }
       break;
 
     case Left:
-      if (!game_info->pause) move_left(game_info, -1);
+      if (!game_info->pause) {
+        move_left(game_info, -1);
+      }
       break;
 
     case Action:
-      if (!game_info->pause) rotate_tetromino(game_info);
+      if (!game_info->pause) {
+        rotate_tetromino(game_info);
+      }
       break;
 
     default:
@@ -339,7 +391,6 @@ void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
   }
 }
 
-//
 bool handle_stick(GameInfo_t *game_info, GameWindows *game_windows) {
   if (!is_collision_below(game_info)) {
     return false;
@@ -347,7 +398,7 @@ bool handle_stick(GameInfo_t *game_info, GameWindows *game_windows) {
   stick_to_bottom(game_info);
   if (has_full_rows(&game_info->field)) {
     render_all(game_windows, game_info);
-    shift_rows(game_info);
+    handle_full_lines(game_info);
   }
   generate_next_tetromino(game_info);
   return true;
@@ -356,6 +407,7 @@ bool handle_stick(GameInfo_t *game_info, GameWindows *game_windows) {
 void check_game_over(GameInfo_t *game_info) {
   if (is_game_over(game_info)) {
     game_info->game_state = STATE_GAME_OVER;
+    save_high_score(game_info->high_score);
   }
 }
 

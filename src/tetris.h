@@ -125,7 +125,10 @@ double get_elapsed_time(struct timespec *start, struct timespec *end);
 
 bool is_full_row(GameField *field, int row);
 bool has_full_rows(GameField *field);
-void shift_rows(GameInfo_t *game_info);
+int clear_full_lines(GameInfo_t *game_info);
+int load_high_score();
+void save_high_score(int score);
+void handle_full_lines(GameInfo_t *game_info);
 
 void handle_user_input(UserAction_t action, GameInfo_t *game_info,
                        GameWindows *game_windows);
