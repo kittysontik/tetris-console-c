@@ -208,11 +208,12 @@ int generate_rand_tetromino() {
   return result;
 }
 
-// 1 нс = 10 в -9 степени сек.
-// перевод наносекунд в секунды
-double get_elapsed_time(struct timespec *start, struct timespec *end) {
-  return ((end->tv_sec - start->tv_sec) +
-          (end->tv_nsec - start->tv_nsec) / 1e9);
+long get_elapsed_time(struct timespec *last_time,
+                      struct timespec *current_time) {
+  long seconds = current_time->tv_sec - last_time->tv_sec;
+  long nanoseconds = current_time->tv_nsec - last_time->tv_nsec;
+  return (seconds * 1000000) +
+         (nanoseconds / 1000);  // возвращаем в микросекундах
 }
 
 bool is_full_row(GameField *field, int row) {
@@ -286,6 +287,27 @@ void handle_full_lines(GameInfo_t *game_info) {
   if (game_info->score > game_info->high_score) {
     game_info->high_score = game_info->score;
   }
+
+  update_level(game_info);
+}
+
+void update_level(GameInfo_t *game_info) {
+  int new_level = game_info->score / 600;
+  if (new_level > 10) {  // ограничение уровней
+    new_level = 10;
+  }
+  game_info->level = new_level;
+}
+
+long get_fall_delay(int level) {
+  long base_delay = FALL_DELAY;
+  long decrease_per_level = 40000;  // уменьшение на уровень (40 миллисек)
+  long delay = base_delay - (level * decrease_per_level);
+
+  if (delay < 100000) {
+    delay = 100000;
+  }  // минимальная задержка — 100 мс
+  return delay;
 }
 
 void generate_next_tetromino(GameInfo_t *game_info) {
@@ -379,9 +401,10 @@ void handle_input_if_any(GameInfo_t *game_info, GameWindows *game_windows) {
 
 void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
                            struct timespec *current_time) {
-  double elapsed_time = get_elapsed_time(&game_info->last_fall, current_time);
+  long elapsed_time = get_elapsed_time(&game_info->last_fall, current_time);
+  long fall_delay = get_fall_delay(game_info->level);
 
-  if (!game_info->pause && elapsed_time >= FALL_DELAY) {
+  if (!game_info->pause && elapsed_time >= fall_delay) {
     bool is_stick_success = handle_stick(game_info, game_windows);
     if (!is_stick_success) {
       move_down(game_info);

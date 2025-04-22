@@ -12,7 +12,7 @@
 #define OFFSET_Y ((getmaxy(stdscr) - WIN_HEIGHT) / 2)
 #define OFFSET_X ((getmaxx(stdscr) - WIN_WIDTH) / 2)
 
-#define FALL_DELAY 0.5          // задержка в 0.5 секунды
+#define FALL_DELAY 500000       // 0.5 секунды в микросекундах
 #define SHIFT_DELAY 3 * 100000  // задержка в 0.3 секунды в микросекундах
 
 #define BLOCK_SYMBOL "\u2592"
@@ -125,7 +125,8 @@ void stick_to_bottom(GameInfo_t *game_info);
 
 int generate_rand_tetromino();
 
-double get_elapsed_time(struct timespec *start, struct timespec *end);
+long get_elapsed_time(struct timespec *last_time,
+                      struct timespec *current_time);
 
 bool is_full_row(GameField *field, int row);
 bool has_full_rows(GameField *field);
@@ -134,6 +135,8 @@ int load_high_score();
 void save_high_score(int score);
 void handle_full_lines(GameInfo_t *game_info);
 int calculate_score(int cleared_lines);
+void update_level(GameInfo_t *game_info);
+long get_fall_delay(int level);
 
 void handle_user_input(UserAction_t action, GameInfo_t *game_info,
                        GameWindows *game_windows);
