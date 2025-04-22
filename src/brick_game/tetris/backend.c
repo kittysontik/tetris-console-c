@@ -68,7 +68,7 @@ GameInfo_t init_game_info() {
   game_info.score = 0;
   game_info.high_score = load_high_score();
   game_info.pause = 0;
-  game_info.speed = 0;
+  game_info.speed = MIN_SPEED;
   game_info.level = 0;
 
   game_info.field = init_field();
@@ -281,6 +281,11 @@ int calculate_score(int cleared_lines) {
 
 void handle_full_lines(GameInfo_t *game_info) {
   int lines = clear_full_lines(game_info);
+
+  update_score(game_info, lines);
+}
+
+void update_score(GameInfo_t *game_info, int lines) {
   int gained = calculate_score(lines);
   game_info->score += gained;
 
@@ -289,25 +294,25 @@ void handle_full_lines(GameInfo_t *game_info) {
   }
 
   update_level(game_info);
+  update_speed(game_info);
 }
 
 void update_level(GameInfo_t *game_info) {
-  int new_level = game_info->score / 600;
-  if (new_level > 10) {  // ограничение уровней
-    new_level = 10;
+  int new_level = game_info->score / SCORE_STEP;
+  if (new_level > 9) {  // ограничение уровней
+    new_level = 9;
   }
   game_info->level = new_level;
 }
 
-long get_fall_delay(int level) {
-  long base_delay = FALL_DELAY;
-  long decrease_per_level = 40000;  // уменьшение на уровень (40 миллисек)
-  long delay = base_delay - (level * decrease_per_level);
+void update_speed(GameInfo_t *game_info) {
+  long new_speed = MIN_SPEED - (game_info->level * LEVEL_SPEED_STEP);
 
-  if (delay < 100000) {
-    delay = 100000;
-  }  // минимальная задержка — 100 мс
-  return delay;
+  if (new_speed < MAX_SPEED) {
+    new_speed = MAX_SPEED;
+  }
+
+  game_info->speed = new_speed;
 }
 
 void generate_next_tetromino(GameInfo_t *game_info) {
@@ -402,9 +407,8 @@ void handle_input_if_any(GameInfo_t *game_info, GameWindows *game_windows) {
 void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
                            struct timespec *current_time) {
   long elapsed_time = get_elapsed_time(&game_info->last_fall, current_time);
-  long fall_delay = get_fall_delay(game_info->level);
 
-  if (!game_info->pause && elapsed_time >= fall_delay) {
+  if (!game_info->pause && elapsed_time >= game_info->speed) {
     bool is_stick_success = handle_stick(game_info, game_windows);
     if (!is_stick_success) {
       move_down(game_info);
@@ -460,7 +464,7 @@ void handle_state_menu(GameInfo_t *game_info, GameWindows *game_windows) {
 
 void handle_state_game_over(GameInfo_t *game_info, GameWindows *game_windows) {
   render_game_over(game_windows);
-  sleep(3);
+  sleep(2);
   game_info->game_state = STATE_EXIT;
 }
 

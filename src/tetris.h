@@ -1,4 +1,3 @@
-
 #include <locale.h>
 #include <ncurses.h>
 #include <stdlib.h>
@@ -12,7 +11,10 @@
 #define OFFSET_Y ((getmaxy(stdscr) - WIN_HEIGHT) / 2)
 #define OFFSET_X ((getmaxx(stdscr) - WIN_WIDTH) / 2)
 
-#define FALL_DELAY 500000       // 0.5 секунды в микросекундах
+#define MIN_SPEED 500000        // 0.5 секунды в микросекундах
+#define LEVEL_SPEED_STEP 10000  // увеличение скорости на каждом уровене
+#define MAX_SPEED 100000
+#define SCORE_STEP 600
 #define SHIFT_DELAY 3 * 100000  // задержка в 0.3 секунды в микросекундах
 
 #define BLOCK_SYMBOL "\u2592"
@@ -57,7 +59,7 @@ typedef struct GameInfo_t {
   int score;
   int high_score;
   int level;
-  int speed;
+  long speed;
   int pause;
 
   GameState game_state;
@@ -82,6 +84,7 @@ typedef struct GameWindows {
   WINDOW *next_win;
   WINDOW *score_win;
   WINDOW *highscore_win;
+  WINDOW *level_win;
 
 } GameWindows;
 
@@ -100,6 +103,7 @@ void draw_next_win(GameWindows *game_windows);
 void render_menu(WINDOW *win);
 void draw_score_win(GameWindows *game_windows, int score);
 void draw_highscore_win(GameWindows *game_windows, int highscore);
+void draw_level_win(GameWindows *game_windows, int level);
 
 // backend
 Tetromino init_tetromino();
@@ -136,7 +140,8 @@ void save_high_score(int score);
 void handle_full_lines(GameInfo_t *game_info);
 int calculate_score(int cleared_lines);
 void update_level(GameInfo_t *game_info);
-long get_fall_delay(int level);
+void update_speed(GameInfo_t *game_info);
+void update_score(GameInfo_t *game_info, int lines);
 
 void handle_user_input(UserAction_t action, GameInfo_t *game_info,
                        GameWindows *game_windows);

@@ -39,6 +39,8 @@ GameWindows init_windows() {
 
   game_windows.highscore_win = newwin(5, 10, offset_y + 13, right_x);
 
+  game_windows.level_win = newwin(5, 10, offset_y + 3, offset_x - 11);
+
   return game_windows;
 }
 
@@ -91,6 +93,7 @@ void render_all(GameWindows *game_windows, GameInfo_t *game_info) {
   draw_next_win(game_windows);
   draw_score_win(game_windows, game_info->score);
   draw_highscore_win(game_windows, game_info->high_score);
+  draw_level_win(game_windows, game_info->level);
   draw_field(game_info, game_windows);
   draw_tetromino(&game_info->current_tetromino, game_windows->game_win);
   draw_next_tetromino(&game_info->next_tetromino, game_windows->next_win);
@@ -101,6 +104,7 @@ void render_all(GameWindows *game_windows, GameInfo_t *game_info) {
   wnoutrefresh(game_windows->next_win);
   wnoutrefresh(game_windows->score_win);
   wnoutrefresh(game_windows->highscore_win);
+  wnoutrefresh(game_windows->level_win);
 
   // Обновляем все окна
   doupdate();
@@ -112,6 +116,7 @@ void render_game_over(GameWindows *game_windows) {
   werase(game_windows->borders_win);
   werase(game_windows->highscore_win);
   werase(game_windows->score_win);
+  werase(game_windows->level_win);
 
   wattron(game_windows->menu_win, COLOR_PAIR(1));
   mvwprintw(game_windows->menu_win, FIELD_HEIGHT / 2, 3, "GAME OVER");
@@ -123,6 +128,7 @@ void render_game_over(GameWindows *game_windows) {
   wrefresh(game_windows->menu_win);
   wrefresh(game_windows->highscore_win);
   wrefresh(game_windows->score_win);
+  wrefresh(game_windows->level_win);
 }
 
 void render_menu(WINDOW *win) {
@@ -160,9 +166,20 @@ void draw_highscore_win(GameWindows *game_windows, int highscore) {
   wattroff(game_windows->highscore_win, COLOR_PAIR(1));
 }
 
+void draw_level_win(GameWindows *game_windows, int level) {
+  wattron(game_windows->level_win, COLOR_PAIR(1));
+  box(game_windows->level_win, 0, 0);
+  mvwprintw(game_windows->level_win, 0, 3, "LEVEL");
+  mvwprintw(game_windows->level_win, 2, 5, "%d", level);
+  wattroff(game_windows->level_win, COLOR_PAIR(1));
+}
+
 void delete_windows(GameWindows *game_windows) {
   delwin(game_windows->borders_win);
   delwin(game_windows->game_win);
   delwin(game_windows->menu_win);
   delwin(game_windows->next_win);
+  delwin(game_windows->highscore_win);
+  delwin(game_windows->score_win);
+  delwin(game_windows->level_win);
 }
