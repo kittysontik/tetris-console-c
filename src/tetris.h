@@ -120,6 +120,11 @@ void draw_score_win(GameWindows *game_windows, int score);
 void draw_highscore_win(GameWindows *game_windows, int highscore);
 void draw_level_win(GameWindows *game_windows, int level);
 
+int center_text_x(WINDOW *win, const char *text);
+void mvwprint_center(WINDOW *win, int y, const char *text);
+void refresh_wins(GameWindows *game_windows);
+void erase_wins(GameWindows *game_windows);
+
 // backend
 Tetromino init_tetromino();
 GameField init_field();

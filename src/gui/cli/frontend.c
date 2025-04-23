@@ -29,7 +29,6 @@ void mvwprint_center(WINDOW *win, int y, const char *text) {
   mvwprintw(win, y, x, "%s", text);
 }
 
-
 GameWindows init_windows() {
   GameWindows game_windows;
 
@@ -128,17 +127,16 @@ void render_all(GameWindows *game_windows, GameInfo_t *game_info) {
 }
 
 void render_game_over(GameWindows *game_windows) {
-  werase(game_windows->game_win);
-  werase(game_windows->next_win);
-  werase(game_windows->borders_win);
-  werase(game_windows->highscore_win);
-  werase(game_windows->score_win);
-  werase(game_windows->level_win);
+  erase_wins(game_windows);
 
   wattron(game_windows->menu_win, COLOR_PAIR(1));
   mvwprint_center(game_windows->menu_win, GAME_OVER_Y, "GAME OVER");
   wattroff(game_windows->menu_win, COLOR_PAIR(1));
 
+  refresh_wins(game_windows);
+}
+
+void refresh_wins(GameWindows *game_windows) {
   wrefresh(game_windows->game_win);
   wrefresh(game_windows->next_win);
   wrefresh(game_windows->borders_win);
@@ -146,6 +144,15 @@ void render_game_over(GameWindows *game_windows) {
   wrefresh(game_windows->highscore_win);
   wrefresh(game_windows->score_win);
   wrefresh(game_windows->level_win);
+}
+
+void erase_wins(GameWindows *game_windows) {
+  werase(game_windows->game_win);
+  werase(game_windows->next_win);
+  werase(game_windows->borders_win);
+  werase(game_windows->highscore_win);
+  werase(game_windows->score_win);
+  werase(game_windows->level_win);
 }
 
 void render_menu(WINDOW *win) {
@@ -164,31 +171,43 @@ void render_menu(WINDOW *win) {
 void draw_next_win(GameWindows *game_windows) {
   wattron(game_windows->next_win, COLOR_PAIR(1));
   box(game_windows->next_win, 0, 0);
-  mvwprintw(game_windows->next_win, 0, 2, "NEXT");
+  mvwprint_center(game_windows->next_win, 0, "NEXT");
   wattroff(game_windows->next_win, COLOR_PAIR(1));
 }
 
 void draw_score_win(GameWindows *game_windows, int score) {
   wattron(game_windows->score_win, COLOR_PAIR(1));
   box(game_windows->score_win, 0, 0);
-  mvwprintw(game_windows->score_win, 0, 2, "SCORE");
-  mvwprintw(game_windows->score_win, 2, 3, "%d", score);
+  mvwprint_center(game_windows->score_win, 0, "SCORE");
+
+  char buffer[16];
+  snprintf(buffer, sizeof(buffer), "%d", score);
+  mvwprint_center(game_windows->score_win, 2, buffer);
+
   wattroff(game_windows->score_win, COLOR_PAIR(1));
 }
 
 void draw_highscore_win(GameWindows *game_windows, int highscore) {
   wattron(game_windows->highscore_win, COLOR_PAIR(1));
   box(game_windows->highscore_win, 0, 0);
-  mvwprintw(game_windows->highscore_win, 0, 1, "HIGHSCORE");
-  mvwprintw(game_windows->highscore_win, 2, 3, "%d", highscore);
+  mvwprint_center(game_windows->highscore_win, 0, "HIGHSCORE");
+
+  char buffer[16];
+  snprintf(buffer, sizeof(buffer), "%d", highscore);
+  mvwprint_center(game_windows->highscore_win, 2, buffer);
+
   wattroff(game_windows->highscore_win, COLOR_PAIR(1));
 }
 
 void draw_level_win(GameWindows *game_windows, int level) {
   wattron(game_windows->level_win, COLOR_PAIR(1));
   box(game_windows->level_win, 0, 0);
-  mvwprintw(game_windows->level_win, 0, 3, "LEVEL");
-  mvwprintw(game_windows->level_win, 2, 5, "%d", level);
+  mvwprint_center(game_windows->level_win, 0, "LEVEL");
+
+  char buffer[16];
+  snprintf(buffer, sizeof(buffer), "%d", level);
+  mvwprint_center(game_windows->level_win, 2, buffer);
+
   wattroff(game_windows->level_win, COLOR_PAIR(1));
 }
 
