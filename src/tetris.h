@@ -1,15 +1,30 @@
 #include <locale.h>
 #include <ncurses.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
 #define FIELD_HEIGHT 20
 #define FIELD_WIDTH 10
-#define WIN_HEIGHT 22
-#define WIN_WIDTH (FIELD_WIDTH * 2 + 2)
+#define BLOCK_WIDTH 2
+#define BORDER_PADDING 1
+#define WIN_HEIGHT (FIELD_HEIGHT + BORDER_PADDING * 2)
+#define WIN_WIDTH (FIELD_WIDTH * BLOCK_WIDTH + BORDER_PADDING * 2)
+#define INFO_BOX_WIDTH 10
+#define INFO_BOX_HEIGHT 5
 #define OFFSET_Y ((getmaxy(stdscr) - WIN_HEIGHT) / 2)
 #define OFFSET_X ((getmaxx(stdscr) - WIN_WIDTH) / 2)
+#define RIGHT_PANEL_X (OFFSET_X + WIN_WIDTH + 1)
+#define LEFT_PANEL_X (OFFSET_X - INFO_BOX_WIDTH - 1)
+
+#define MENU_TITLE_Y 6
+#define MENU_START_Y (MENU_TITLE_Y + 2)
+#define MENU_PAUSE_Y (MENU_TITLE_Y + 3)
+#define MENU_QUIT_Y (MENU_TITLE_Y + 4)
+#define MENU_MOVE_Y (MENU_TITLE_Y + 5)
+#define MENU_X_OFFSET 2
+#define GAME_OVER_Y (FIELD_HEIGHT / 2)
 
 #define MIN_SPEED 500000        // 0.5 секунды в микросекундах
 #define LEVEL_SPEED_STEP 10000  // увеличение скорости на каждом уровене

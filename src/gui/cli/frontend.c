@@ -19,27 +19,44 @@ void init_ncurses(GameWindows *game_windows) {
   init_colors();
 }
 
+int center_text_x(WINDOW *win, const char *text) {
+  return (getmaxx(win) - strlen(text)) / 2;
+}
+
+void mvwprint_center(WINDOW *win, int y, const char *text) {
+  int width = getmaxx(win);
+  int x = (width - strlen(text)) / 2;
+  mvwprintw(win, y, x, "%s", text);
+}
+
+
 GameWindows init_windows() {
+  GameWindows game_windows;
+
+  // Центральные отступы
   int offset_y = OFFSET_Y;
   int offset_x = OFFSET_X;
 
-  GameWindows game_windows;
-
+  // Главное меню
   game_windows.menu_win = newwin(WIN_HEIGHT, WIN_HEIGHT, offset_y, offset_x);
+
+  // Игровое поле  и рамка игрового поля
+  game_windows.game_win =
+      newwin(FIELD_HEIGHT, FIELD_WIDTH * BLOCK_WIDTH, offset_y + BORDER_PADDING,
+             offset_x + BORDER_PADDING);
   game_windows.borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, offset_y, offset_x);
 
-  game_windows.game_win =
-      newwin(FIELD_HEIGHT, FIELD_WIDTH * 2, offset_y + 1, offset_x + 1);
+  // Окна справа
+  game_windows.next_win =
+      newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 3, RIGHT_PANEL_X);
+  game_windows.score_win =
+      newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 8, RIGHT_PANEL_X);
+  game_windows.highscore_win =
+      newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 13, RIGHT_PANEL_X);
 
-  int right_x = offset_x + WIN_WIDTH + 1;
-
-  game_windows.next_win = newwin(5, 10, offset_y + 3, right_x);
-
-  game_windows.score_win = newwin(5, 10, offset_y + 8, right_x);
-
-  game_windows.highscore_win = newwin(5, 10, offset_y + 13, right_x);
-
-  game_windows.level_win = newwin(5, 10, offset_y + 3, offset_x - 11);
+  // Окно уровня слева
+  game_windows.level_win =
+      newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 3, LEFT_PANEL_X);
 
   return game_windows;
 }
@@ -119,7 +136,7 @@ void render_game_over(GameWindows *game_windows) {
   werase(game_windows->level_win);
 
   wattron(game_windows->menu_win, COLOR_PAIR(1));
-  mvwprintw(game_windows->menu_win, FIELD_HEIGHT / 2, 3, "GAME OVER");
+  mvwprint_center(game_windows->menu_win, GAME_OVER_Y, "GAME OVER");
   wattroff(game_windows->menu_win, COLOR_PAIR(1));
 
   wrefresh(game_windows->game_win);
@@ -133,11 +150,12 @@ void render_game_over(GameWindows *game_windows) {
 
 void render_menu(WINDOW *win) {
   wattron(win, COLOR_PAIR(1));
-  mvwprintw(win, 6, 4, "TETRIS");
-  mvwprintw(win, 8, 1, "START: s");
-  mvwprintw(win, 9, 1, "PAUSE: p");
-  mvwprintw(win, 10, 1, "QUIT: q");
-  mvwprintw(win, 11, 1, "MOVE: ARROW KEYS");
+  mvwprint_center(win, MENU_TITLE_Y, "TETRIS");
+
+  mvwprintw(win, MENU_START_Y, MENU_X_OFFSET, "START: s");
+  mvwprintw(win, MENU_PAUSE_Y, MENU_X_OFFSET, "PAUSE: p");
+  mvwprintw(win, MENU_QUIT_Y, MENU_X_OFFSET, "QUIT: q");
+  mvwprintw(win, MENU_MOVE_Y, MENU_X_OFFSET, "MOVE: ARROW KEYS");
   wattroff(win, COLOR_PAIR(1));
 
   wrefresh(win);
