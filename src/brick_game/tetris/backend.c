@@ -536,3 +536,25 @@ GameInfo_t update_current_state(GameInfo_t* game_info, GameWindows* game_windows
 
   return *game_info;
 }
+
+void reset_game(GameInfo_t* game_info)
+{
+  srand(time(NULL));
+
+  game_info->score = 0;
+  game_info->level = 0;
+  game_info->speed = MIN_SPEED;
+  game_info->pause = 0;
+
+  game_info->high_score = load_high_score();
+
+  game_info->field = init_field();
+
+  game_info->current_tetromino = init_tetromino();
+  game_info->next_tetromino = init_tetromino();
+
+  game_info->game_state = STATE_MENU;
+
+  game_info->last_fall.tv_sec = 0;
+  game_info->last_fall.tv_nsec = 0;
+}

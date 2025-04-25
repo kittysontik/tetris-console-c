@@ -182,3 +182,5 @@ void handle_state_game_over(GameInfo_t* game_info, GameWindows* game_windows);
 UserAction_t map_key_to_action(int ch);
 
 GameInfo_t update_current_state(GameInfo_t* game_info, GameWindows* game_windows);
+
+void reset_game(GameInfo_t* game_info);
