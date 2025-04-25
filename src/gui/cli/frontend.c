@@ -1,17 +1,19 @@
 #include "../../tetris.h"
 
-void init_colors() {
+void init_colors(void)
+{
   init_pair(1, COLOR_YELLOW, COLOR_BLACK);
   init_pair(2, COLOR_CYAN, COLOR_BLACK);
 }
 
-void init_ncurses(GameWindows *game_windows) {
+void init_ncurses(GameWindows* game_windows)
+{
   start_color();
   cbreak();
   keypad(stdscr, TRUE);
   keypad(game_windows->game_win, TRUE);
   keypad(game_windows->borders_win, TRUE);
-  nodelay(game_windows->game_win, TRUE);  // Не блокируем wgetch() во время игры
+  nodelay(game_windows->game_win, TRUE);   // Не блокируем wgetch() во время игры
   nodelay(game_windows->menu_win, FALSE);  // ждем ввод пользователя
   keypad(game_windows->menu_win, TRUE);
   noecho();
@@ -19,17 +21,17 @@ void init_ncurses(GameWindows *game_windows) {
   init_colors();
 }
 
-int center_text_x(WINDOW *win, const char *text) {
-  return (getmaxx(win) - strlen(text)) / 2;
-}
+int center_text_x(WINDOW* win, const char* text) { return (getmaxx(win) - strlen(text)) / 2; }
 
-void mvwprint_center(WINDOW *win, int y, const char *text) {
+void mvwprint_center(WINDOW* win, int y, const char* text)
+{
   int width = getmaxx(win);
   int x = (width - strlen(text)) / 2;
   mvwprintw(win, y, x, "%s", text);
 }
 
-GameWindows init_windows() {
+GameWindows init_windows(void)
+{
   GameWindows game_windows;
 
   // Центральные отступы
@@ -40,27 +42,24 @@ GameWindows init_windows() {
   game_windows.menu_win = newwin(WIN_HEIGHT, WIN_HEIGHT, offset_y, offset_x);
 
   // Игровое поле  и рамка игрового поля
-  game_windows.game_win =
-      newwin(FIELD_HEIGHT, FIELD_WIDTH * BLOCK_WIDTH, offset_y + BORDER_PADDING,
-             offset_x + BORDER_PADDING);
+  game_windows.game_win = newwin(FIELD_HEIGHT, FIELD_WIDTH * BLOCK_WIDTH, offset_y + BORDER_PADDING,
+                                 offset_x + BORDER_PADDING);
   game_windows.borders_win = newwin(WIN_HEIGHT, WIN_WIDTH, offset_y, offset_x);
 
   // Окна справа
-  game_windows.next_win =
-      newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 3, RIGHT_PANEL_X);
-  game_windows.score_win =
-      newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 8, RIGHT_PANEL_X);
+  game_windows.next_win = newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 3, RIGHT_PANEL_X);
+  game_windows.score_win = newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 8, RIGHT_PANEL_X);
   game_windows.highscore_win =
       newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 13, RIGHT_PANEL_X);
 
   // Окно уровня слева
-  game_windows.level_win =
-      newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 3, LEFT_PANEL_X);
+  game_windows.level_win = newwin(INFO_BOX_HEIGHT, INFO_BOX_WIDTH, offset_y + 3, LEFT_PANEL_X);
 
   return game_windows;
 }
 
-void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
+void draw_field(GameInfo_t* game_info, GameWindows* game_windows)
+{
   wattron(game_windows->game_win, COLOR_PAIR(1));
   for (int y = 0; y < FIELD_HEIGHT; y++) {
     for (int x = 0; x < FIELD_WIDTH; x++) {
@@ -75,7 +74,8 @@ void draw_field(GameInfo_t *game_info, GameWindows *game_windows) {
   wattroff(game_windows->game_win, COLOR_PAIR(1));
 }
 
-void draw_tetromino(Tetromino *t, WINDOW *win) {
+void draw_tetromino(Tetromino* t, WINDOW* win)
+{
   wattron(win, COLOR_PAIR(2));
   for (int i = 0; i < 4; i++) {
     int draw_x = t->blocks[i].x * 2;
@@ -85,7 +85,8 @@ void draw_tetromino(Tetromino *t, WINDOW *win) {
   wattroff(win, COLOR_PAIR(2));
 }
 
-void draw_next_tetromino(Tetromino *t, WINDOW *win) {
+void draw_next_tetromino(Tetromino* t, WINDOW* win)
+{
   wattron(win, COLOR_PAIR(2));
   for (int i = 0; i < 4; i++) {
     int draw_x = t->blocks[i].x * 2 - 5;
@@ -95,13 +96,15 @@ void draw_next_tetromino(Tetromino *t, WINDOW *win) {
   wattroff(win, COLOR_PAIR(2));
 }
 
-void draw_box(WINDOW *win) {
+void draw_box(WINDOW* win)
+{
   wattron(win, COLOR_PAIR(1));
   box(win, 0, 0);
   wattroff(win, COLOR_PAIR(1));
 }
 
-void render_all(GameWindows *game_windows, GameInfo_t *game_info) {
+void render_all(GameWindows* game_windows, GameInfo_t* game_info)
+{
   werase(game_windows->game_win);
   werase(game_windows->next_win);
 
@@ -126,7 +129,8 @@ void render_all(GameWindows *game_windows, GameInfo_t *game_info) {
   doupdate();
 }
 
-void render_game_over(GameWindows *game_windows) {
+void render_game_over(GameWindows* game_windows)
+{
   erase_wins(game_windows);
 
   wattron(game_windows->menu_win, COLOR_PAIR(1));
@@ -136,7 +140,8 @@ void render_game_over(GameWindows *game_windows) {
   refresh_wins(game_windows);
 }
 
-void refresh_wins(GameWindows *game_windows) {
+void refresh_wins(GameWindows* game_windows)
+{
   wrefresh(game_windows->game_win);
   wrefresh(game_windows->next_win);
   wrefresh(game_windows->borders_win);
@@ -146,7 +151,8 @@ void refresh_wins(GameWindows *game_windows) {
   wrefresh(game_windows->level_win);
 }
 
-void erase_wins(GameWindows *game_windows) {
+void erase_wins(GameWindows* game_windows)
+{
   werase(game_windows->game_win);
   werase(game_windows->next_win);
   werase(game_windows->borders_win);
@@ -155,7 +161,8 @@ void erase_wins(GameWindows *game_windows) {
   werase(game_windows->level_win);
 }
 
-void render_menu(WINDOW *win) {
+void render_menu(WINDOW* win)
+{
   wattron(win, COLOR_PAIR(1));
   mvwprint_center(win, MENU_TITLE_Y, "TETRIS");
 
@@ -168,14 +175,16 @@ void render_menu(WINDOW *win) {
   wrefresh(win);
 }
 
-void draw_next_win(GameWindows *game_windows) {
+void draw_next_win(GameWindows* game_windows)
+{
   wattron(game_windows->next_win, COLOR_PAIR(1));
   box(game_windows->next_win, 0, 0);
   mvwprint_center(game_windows->next_win, 0, "NEXT");
   wattroff(game_windows->next_win, COLOR_PAIR(1));
 }
 
-void draw_score_win(GameWindows *game_windows, int score) {
+void draw_score_win(GameWindows* game_windows, int score)
+{
   wattron(game_windows->score_win, COLOR_PAIR(1));
   box(game_windows->score_win, 0, 0);
   mvwprint_center(game_windows->score_win, 0, "SCORE");
@@ -187,7 +196,8 @@ void draw_score_win(GameWindows *game_windows, int score) {
   wattroff(game_windows->score_win, COLOR_PAIR(1));
 }
 
-void draw_highscore_win(GameWindows *game_windows, int highscore) {
+void draw_highscore_win(GameWindows* game_windows, int highscore)
+{
   wattron(game_windows->highscore_win, COLOR_PAIR(1));
   box(game_windows->highscore_win, 0, 0);
   mvwprint_center(game_windows->highscore_win, 0, "HIGHSCORE");
@@ -199,7 +209,8 @@ void draw_highscore_win(GameWindows *game_windows, int highscore) {
   wattroff(game_windows->highscore_win, COLOR_PAIR(1));
 }
 
-void draw_level_win(GameWindows *game_windows, int level) {
+void draw_level_win(GameWindows* game_windows, int level)
+{
   wattron(game_windows->level_win, COLOR_PAIR(1));
   box(game_windows->level_win, 0, 0);
   mvwprint_center(game_windows->level_win, 0, "LEVEL");
@@ -211,7 +222,8 @@ void draw_level_win(GameWindows *game_windows, int level) {
   wattroff(game_windows->level_win, COLOR_PAIR(1));
 }
 
-void delete_windows(GameWindows *game_windows) {
+void delete_windows(GameWindows* game_windows)
+{
   delwin(game_windows->borders_win);
   delwin(game_windows->game_win);
   delwin(game_windows->menu_win);

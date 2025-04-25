@@ -1,7 +1,7 @@
 #include "../../tetris.h"
 
-
-int main(void) {
+int main(void)
+{
   setlocale(LC_ALL, "");
 
   initscr();

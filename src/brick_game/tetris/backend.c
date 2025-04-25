@@ -1,6 +1,7 @@
 #include "../../tetris.h"
 
-int get_min_y_from_tetromino(const int shape[4][2]) {
+int get_min_y_from_tetromino(const int shape[4][2])
+{
   int min_y = shape[0][1];  // инициализиурем минимальную y-координату первым
                             // блоком тетромино координатой y
   for (int i = 1; i < 4; i++) {
@@ -11,7 +12,8 @@ int get_min_y_from_tetromino(const int shape[4][2]) {
   return min_y;
 }
 
-Tetromino init_tetromino() {
+Tetromino init_tetromino(void)
+{
   Tetromino t;
   int center_x = FIELD_WIDTH / 2;
   t.type = generate_rand_tetromino();
@@ -32,7 +34,7 @@ Tetromino init_tetromino() {
       {{-1, 1}, {0, 1}, {-2, 0}, {-1, 0}},  // TETROMINO_Z
   };
 
-  const int (*shape)[2] = shapes[t.type];  // двумерный массив
+  const int(*shape)[2] = shapes[t.type];  // двумерный массив
   int min_y = get_min_y_from_tetromino(shape);
 
   for (int i = 0; i < 4; i++) {
@@ -42,7 +44,8 @@ Tetromino init_tetromino() {
   return t;
 }
 
-GameField init_field() {
+GameField init_field(void)
+{
   GameField field;
   for (int y = 0; y < FIELD_HEIGHT; y++) {
     for (int x = 0; x < FIELD_WIDTH; x++) {
@@ -52,8 +55,9 @@ GameField init_field() {
   return field;
 }
 
-int load_high_score() {
-  FILE *file = fopen("highscore.txt", "r");
+int load_high_score(void)
+{
+  FILE* file = fopen("highscore.txt", "r");
   int score = 0;
   if (file) {
     fscanf(file, "%d", &score);
@@ -62,7 +66,8 @@ int load_high_score() {
   return score;
 }
 
-GameInfo_t init_game_info() {
+GameInfo_t init_game_info(void)
+{
   GameInfo_t game_info;
 
   game_info.score = 0;
@@ -84,7 +89,8 @@ GameInfo_t init_game_info() {
   return game_info;
 }
 
-void move_down(GameInfo_t *game_info) {
+void move_down(GameInfo_t* game_info)
+{
   if (is_collision_below(game_info)) {
     return;
   }
@@ -93,15 +99,15 @@ void move_down(GameInfo_t *game_info) {
   }
 }
 
-bool is_out_of_borders(int x, int y) {
-  return (x < 0 || x >= FIELD_WIDTH || y >= FIELD_HEIGHT);
-}
+bool is_out_of_borders(int x, int y) { return (x < 0 || x >= FIELD_WIDTH || y >= FIELD_HEIGHT); }
 
-bool is_cell_occupied(GameInfo_t *game_info, int x, int y) {
+bool is_cell_occupied(GameInfo_t* game_info, int x, int y)
+{
   return (y >= 0 && game_info->field.cells[y][x] == 1);
 }
 
-bool is_game_over(GameInfo_t *game_info) {
+bool is_game_over(GameInfo_t* game_info)
+{
   for (int i = 0; i < 4; i++) {
     int x = game_info->current_tetromino.blocks[i].x;
     int y = game_info->current_tetromino.blocks[i].y;
@@ -112,20 +118,21 @@ bool is_game_over(GameInfo_t *game_info) {
   return false;
 }
 
-bool is_collision_on_sides(GameInfo_t *game_info, int direction) {
+bool is_collision_on_sides(GameInfo_t* game_info, int direction)
+{
   for (int i = 0; i < 4; i++) {
     int next_x = game_info->current_tetromino.blocks[i].x + direction;
     int y = game_info->current_tetromino.blocks[i].y;
 
-    if (is_out_of_borders(next_x, y) ||
-        is_cell_occupied(game_info, next_x, y)) {
+    if (is_out_of_borders(next_x, y) || is_cell_occupied(game_info, next_x, y)) {
       return true;
     }
   }
   return false;
 }
 
-void move_right(GameInfo_t *game_info, int direction) {
+void move_right(GameInfo_t* game_info, int direction)
+{
   if (!is_collision_on_sides(game_info, direction)) {
     for (int i = 0; i < 4; i++) {
       game_info->current_tetromino.blocks[i].x += 1;
@@ -133,7 +140,8 @@ void move_right(GameInfo_t *game_info, int direction) {
   }
 }
 
-void move_left(GameInfo_t *game_info, int direction) {
+void move_left(GameInfo_t* game_info, int direction)
+{
   if (!is_collision_on_sides(game_info, direction)) {
     for (int i = 0; i < 4; i++) {
       game_info->current_tetromino.blocks[i].x -= 1;
@@ -141,20 +149,21 @@ void move_left(GameInfo_t *game_info, int direction) {
   }
 }
 
-bool is_collision_below(GameInfo_t *game_info) {
+bool is_collision_below(GameInfo_t* game_info)
+{
   for (int i = 0; i < 4; i++) {
     int next_y = game_info->current_tetromino.blocks[i].y + 1;
     int x = game_info->current_tetromino.blocks[i].x;
 
-    if (is_out_of_borders(x, next_y) ||
-        is_cell_occupied(game_info, x, next_y)) {
+    if (is_out_of_borders(x, next_y) || is_cell_occupied(game_info, x, next_y)) {
       return true;
     }
   }
   return false;
 }
 
-bool can_rotate(GameInfo_t *game_info, Tetromino *rotated) {
+bool can_rotate(GameInfo_t* game_info, Tetromino* rotated)
+{
   for (int i = 0; i < 4; i++) {
     int x = rotated->blocks[i].x;
     int y = rotated->blocks[i].y;
@@ -166,7 +175,8 @@ bool can_rotate(GameInfo_t *game_info, Tetromino *rotated) {
   return true;
 }
 
-void rotate_tetromino(GameInfo_t *game_info) {
+void rotate_tetromino(GameInfo_t* game_info)
+{
   if (game_info->current_tetromino.type == TETROMINO_O) {
     return;  // Квадрат не вращается
   }
@@ -188,7 +198,8 @@ void rotate_tetromino(GameInfo_t *game_info) {
   game_info->current_tetromino = rotated;
 }
 
-void stick_to_bottom(GameInfo_t *game_info) {
+void stick_to_bottom(GameInfo_t* game_info)
+{
   for (int i = 0; i < 4; i++) {
     int y = game_info->current_tetromino.blocks[i].y;
     int x = game_info->current_tetromino.blocks[i].x;
@@ -199,7 +210,8 @@ void stick_to_bottom(GameInfo_t *game_info) {
   }
 }
 
-int generate_rand_tetromino() {
+int generate_rand_tetromino(void)
+{
   int result;
   srand(clock());
   for (int i = 0; i < 20; i++) {
@@ -208,15 +220,15 @@ int generate_rand_tetromino() {
   return result;
 }
 
-long get_elapsed_time(struct timespec *last_time,
-                      struct timespec *current_time) {
+long get_elapsed_time(struct timespec* last_time, struct timespec* current_time)
+{
   long seconds = current_time->tv_sec - last_time->tv_sec;
   long nanoseconds = current_time->tv_nsec - last_time->tv_nsec;
-  return (seconds * 1000000) +
-         (nanoseconds / 1000);  // возвращаем в микросекундах
+  return (seconds * 1000000) + (nanoseconds / 1000);  // возвращаем в микросекундах
 }
 
-bool is_full_row(GameField *field, int row) {
+bool is_full_row(GameField* field, int row)
+{
   for (int j = 0; j < FIELD_WIDTH; j++) {
     if (field->cells[row][j] == 0) {
       return false;
@@ -225,7 +237,8 @@ bool is_full_row(GameField *field, int row) {
   return true;
 }
 
-bool has_full_rows(GameField *field) {
+bool has_full_rows(GameField* field)
+{
   for (int i = 0; i < FIELD_HEIGHT; i++) {
     if (is_full_row(field, i)) {
       return true;
@@ -234,7 +247,8 @@ bool has_full_rows(GameField *field) {
   return false;
 }
 
-int clear_full_lines(GameInfo_t *game_info) {
+int clear_full_lines(GameInfo_t* game_info)
+{
   int cleared_lines = 0;
   // перед удалением полной строки делаем паузу
   usleep(SHIFT_DELAY);
@@ -256,15 +270,17 @@ int clear_full_lines(GameInfo_t *game_info) {
   return cleared_lines;
 }
 
-void save_high_score(int score) {
-  FILE *file = fopen("highscore.txt", "w");
+void save_high_score(int score)
+{
+  FILE* file = fopen("highscore.txt", "w");
   if (file) {
     fprintf(file, "%d", score);
     fclose(file);
   }
 }
 
-int calculate_score(int cleared_lines) {
+int calculate_score(int cleared_lines)
+{
   switch (cleared_lines) {
     case 1:
       return 100;
@@ -279,13 +295,15 @@ int calculate_score(int cleared_lines) {
   }
 }
 
-void handle_full_lines(GameInfo_t *game_info) {
+void handle_full_lines(GameInfo_t* game_info)
+{
   int lines = clear_full_lines(game_info);
 
   update_score(game_info, lines);
 }
 
-void update_score(GameInfo_t *game_info, int lines) {
+void update_score(GameInfo_t* game_info, int lines)
+{
   int gained = calculate_score(lines);
   game_info->score += gained;
 
@@ -297,7 +315,8 @@ void update_score(GameInfo_t *game_info, int lines) {
   update_speed(game_info);
 }
 
-void update_level(GameInfo_t *game_info) {
+void update_level(GameInfo_t* game_info)
+{
   int new_level = game_info->score / SCORE_STEP;
   if (new_level > 9) {  // ограничение уровней
     new_level = 9;
@@ -305,7 +324,8 @@ void update_level(GameInfo_t *game_info) {
   game_info->level = new_level;
 }
 
-void update_speed(GameInfo_t *game_info) {
+void update_speed(GameInfo_t* game_info)
+{
   long new_speed = MIN_SPEED - (game_info->level * LEVEL_SPEED_STEP);
 
   if (new_speed < MAX_SPEED) {
@@ -315,13 +335,14 @@ void update_speed(GameInfo_t *game_info) {
   game_info->speed = new_speed;
 }
 
-void generate_next_tetromino(GameInfo_t *game_info) {
+void generate_next_tetromino(GameInfo_t* game_info)
+{
   game_info->current_tetromino = game_info->next_tetromino;
   game_info->next_tetromino = init_tetromino();
 }
 
-void handle_user_input(UserAction_t action, GameInfo_t *game_info,
-                       GameWindows *game_windows) {
+void handle_user_input(UserAction_t action, GameInfo_t* game_info, GameWindows* game_windows)
+{
   switch (action) {
     case Terminate:
       game_info->game_state = STATE_EXIT;
@@ -367,7 +388,8 @@ void handle_user_input(UserAction_t action, GameInfo_t *game_info,
   }
 }
 
-void run_game_fsm(GameInfo_t *game_info, GameWindows *game_windows) {
+void run_game_fsm(GameInfo_t* game_info, GameWindows* game_windows)
+{
   while (game_info->game_state != STATE_EXIT) {
     switch (game_info->game_state) {
       case STATE_MENU:
@@ -389,23 +411,26 @@ void run_game_fsm(GameInfo_t *game_info, GameWindows *game_windows) {
   }
 }
 
-void handle_state_playing(GameInfo_t *game_info, GameWindows *game_windows) {
+void handle_state_playing(GameInfo_t* game_info, GameWindows* game_windows)
+{
   *game_info = update_current_state(game_info, game_windows);
   render_all(game_windows, game_info);
 }
 
-void handle_input_if_any(GameInfo_t *game_info, GameWindows *game_windows) {
+void handle_input_if_any(GameInfo_t* game_info, GameWindows* game_windows)
+{
   int ch = wgetch(game_windows->game_win);
   if (ch == ERR) return;
 
   UserAction_t action = map_key_to_action(ch);
-  if (action == -1) return;
+  if (action == NoAction) return;
 
   handle_user_input(action, game_info, game_windows);
 }
 
-void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
-                           struct timespec *current_time) {
+void handle_tetromino_fall(GameInfo_t* game_info, GameWindows* game_windows,
+                           struct timespec* current_time)
+{
   long elapsed_time = get_elapsed_time(&game_info->last_fall, current_time);
 
   if (!game_info->pause && elapsed_time >= game_info->speed) {
@@ -418,7 +443,8 @@ void handle_tetromino_fall(GameInfo_t *game_info, GameWindows *game_windows,
   }
 }
 
-bool handle_stick(GameInfo_t *game_info, GameWindows *game_windows) {
+bool handle_stick(GameInfo_t* game_info, GameWindows* game_windows)
+{
   if (!is_collision_below(game_info)) {
     return false;
   }
@@ -431,14 +457,16 @@ bool handle_stick(GameInfo_t *game_info, GameWindows *game_windows) {
   return true;
 }
 
-void check_game_over(GameInfo_t *game_info) {
+void check_game_over(GameInfo_t* game_info)
+{
   if (is_game_over(game_info)) {
     game_info->game_state = STATE_GAME_OVER;
     save_high_score(game_info->high_score);
   }
 }
 
-void handle_state_menu(GameInfo_t *game_info, GameWindows *game_windows) {
+void handle_state_menu(GameInfo_t* game_info, GameWindows* game_windows)
+{
   render_menu(game_windows->menu_win);
 
   int ch = wgetch(game_windows->menu_win);
@@ -462,13 +490,15 @@ void handle_state_menu(GameInfo_t *game_info, GameWindows *game_windows) {
   }
 }
 
-void handle_state_game_over(GameInfo_t *game_info, GameWindows *game_windows) {
+void handle_state_game_over(GameInfo_t* game_info, GameWindows* game_windows)
+{
   render_game_over(game_windows);
   sleep(2);
   game_info->game_state = STATE_EXIT;
 }
 
-UserAction_t map_key_to_action(int ch) {
+UserAction_t map_key_to_action(int ch)
+{
   switch (ch) {
     case 'q':
       return Terminate;
@@ -485,12 +515,12 @@ UserAction_t map_key_to_action(int ch) {
     case KEY_UP:
       return Action;  // Вращение фигуры
     default:
-      return -1;  // Неизвестная клавиша
+      return NoAction;  // Неизвестная клавиша
   }
 }
 
-GameInfo_t update_current_state(GameInfo_t *game_info,
-                                GameWindows *game_windows) {
+GameInfo_t update_current_state(GameInfo_t* game_info, GameWindows* game_windows)
+{
   if (game_info->game_state != STATE_PLAYING) {
     return *game_info;
   }
