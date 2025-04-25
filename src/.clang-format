@@ -1,0 +1,12 @@
+# .clang-format
+
+BasedOnStyle: Google                         # Базовый стиль Google
+ColumnLimit: 100                             # Максимальная длина строки
+BreakBeforeBraces: Linux                     # Скобки всегда с новой строки
+DerivePointerAlignment: false                # Не определять выравнивание указателей автоматически
+PointerAlignment: Left                       # int* ptr, а не int *ptr
+AlignTrailingComments: true                  # Выравнивать комментарии, стоящие после кода, по вертикали
+SortIncludes: false                          # Не трогать порядок #include
+SpaceBeforeParens: ControlStatements         # Пробел перед скобками в if, while и т.д.
+CommentPragmas: Insert                       # Вставлять специальные pragma-комментарии при необходимости
+AllowShortFunctionsOnASingleLine: Empty      # Функции в одну строку только {}

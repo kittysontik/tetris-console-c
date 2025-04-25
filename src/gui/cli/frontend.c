@@ -21,7 +21,10 @@ void init_ncurses(GameWindows* game_windows)
   init_colors();
 }
 
-int center_text_x(WINDOW* win, const char* text) { return (getmaxx(win) - strlen(text)) / 2; }
+int center_text_x(WINDOW* win, const char* text)
+{
+  return (getmaxx(win) - strlen(text)) / 2;
+}
 
 void mvwprint_center(WINDOW* win, int y, const char* text)
 {

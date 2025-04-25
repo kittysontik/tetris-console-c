@@ -68,6 +68,8 @@ int load_high_score(void)
 
 GameInfo_t init_game_info(void)
 {
+  srand(time(NULL));  // инициализация генератора случайных чисел
+
   GameInfo_t game_info;
 
   game_info.score = 0;
@@ -99,7 +101,10 @@ void move_down(GameInfo_t* game_info)
   }
 }
 
-bool is_out_of_borders(int x, int y) { return (x < 0 || x >= FIELD_WIDTH || y >= FIELD_HEIGHT); }
+bool is_out_of_borders(int x, int y)
+{
+  return (x < 0 || x >= FIELD_WIDTH || y >= FIELD_HEIGHT);
+}
 
 bool is_cell_occupied(GameInfo_t* game_info, int x, int y)
 {
@@ -212,12 +217,7 @@ void stick_to_bottom(GameInfo_t* game_info)
 
 int generate_rand_tetromino(void)
 {
-  int result;
-  srand(clock());
-  for (int i = 0; i < 20; i++) {
-    result = rand() % TETROMINO_COUNT;
-  }
-  return result;
+  return rand() % TETROMINO_COUNT;
 }
 
 long get_elapsed_time(struct timespec* last_time, struct timespec* current_time)
