@@ -7,6 +7,7 @@ CFLAGS = -std=c11 -Wall -Werror -Wextra -Wpedantic -Wno-gnu-zero-variadic-macro-
 
 LIBS = -lncurses
 CHECK_LIBS = $(shell pkg-config --libs --cflags check)
+COVERAGE_FLAGS = -fprofile-arcs -ftest-coverage
 
 OBJS = $(OUT_DIR)/backend.o $(OUT_DIR)/tetris.o $(OUT_DIR)/frontend.o
 
@@ -39,6 +40,14 @@ $(OUT_DIR)/%.o: $(TESTS_DIR)/%.c
 	@mkdir -p $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+coverage_build: CFLAGS += $(COVERAGE_FLAGS)
+coverage_build: clean
+	$(MAKE) test
+
+gcov_report: coverage_build
+	gcov -o out brick_game/tetris/backend.c
+
+
 clean:
 	rm -rf $(OUT_DIR) tetris test_runner
 
@@ -52,3 +61,4 @@ format:
 	find . -name "*.c" -or -name "*.h" | xargs $(CLANG-FORMAT) -i
 
 .PHONY: all test clean tetris
+
