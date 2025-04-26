@@ -123,18 +123,6 @@ START_TEST(test_clear_full_lines)
 }
 END_TEST
 
-START_TEST(test_generate_rand_tetromino)
-{
-  GameInfo_t game_info = init_game_info();
-
-  int current_type = game_info.current_tetromino.type;
-
-  game_info.current_tetromino = init_tetromino();
-
-  ck_assert_int_ne(game_info.current_tetromino.type, current_type);
-}
-END_TEST
-
 START_TEST(test_check_game_over)
 {
   GameInfo_t game_info = init_game_info();
@@ -203,6 +191,214 @@ START_TEST(test_rotate_tetromino_with_collision)
 }
 END_TEST
 
+START_TEST(test_is_collision_on_sides_no_collision)
+{
+  GameInfo_t game_info = {0};
+
+  for (int i = 0; i < 4; i++) {
+    game_info.current_tetromino.blocks[i].x = 4 + i;
+    game_info.current_tetromino.blocks[i].y = 10;
+  }
+  ck_assert(!is_collision_on_sides(&game_info, 1));
+  ck_assert(!is_collision_on_sides(&game_info, -1));
+}
+END_TEST
+
+START_TEST(test_is_collision_on_sides_border_collision)
+{
+  GameInfo_t game_info = {0};
+
+  for (int i = 0; i < 4; i++) {
+    game_info.current_tetromino.blocks[i].x = FIELD_WIDTH - 1;
+    game_info.current_tetromino.blocks[i].y = i;
+  }
+  ck_assert(is_collision_on_sides(&game_info, 1));
+}
+END_TEST
+
+START_TEST(test_is_collision_on_sides_cell_occupied)
+{
+  GameInfo_t game_info = {0};
+
+  game_info.field.cells[10][5] = 1;
+  for (int i = 0; i < 4; i++) {
+    game_info.current_tetromino.blocks[i].x = 4;
+    game_info.current_tetromino.blocks[i].y = 10;
+  }
+  ck_assert(is_collision_on_sides(&game_info, 1));
+}
+END_TEST
+
+START_TEST(test_move_right_success)
+{
+  GameInfo_t game_info = {0};
+
+  for (int i = 0; i < 4; i++) {
+    game_info.current_tetromino.blocks[i].x = 5;
+    game_info.current_tetromino.blocks[i].y = 10;
+  }
+  move_right(&game_info, 1);
+  for (int i = 0; i < 4; i++) {
+    ck_assert_int_eq(game_info.current_tetromino.blocks[i].x, 6);
+  }
+}
+END_TEST
+
+START_TEST(test_move_right_blocked)
+{
+  GameInfo_t game_info = {0};
+
+  for (int i = 0; i < 4; i++) {
+    game_info.current_tetromino.blocks[i].x = FIELD_WIDTH - 1;
+    game_info.current_tetromino.blocks[i].y = 10;
+  }
+  move_right(&game_info, 1);
+  for (int i = 0; i < 4; i++) {
+    ck_assert_int_eq(game_info.current_tetromino.blocks[i].x, FIELD_WIDTH - 1);
+  }
+}
+END_TEST
+
+START_TEST(test_move_left_success)
+{
+  GameInfo_t game_info = {0};
+
+  for (int i = 0; i < 4; i++) {
+    game_info.current_tetromino.blocks[i].x = 5;
+    game_info.current_tetromino.blocks[i].y = 10;
+  }
+  move_left(&game_info, -1);
+  for (int i = 0; i < 4; i++) {
+    ck_assert_int_eq(game_info.current_tetromino.blocks[i].x, 4);
+  }
+}
+END_TEST
+
+START_TEST(test_move_left_blocked)
+{
+  GameInfo_t game_info = {0};
+
+  for (int i = 0; i < 4; i++) {
+    game_info.current_tetromino.blocks[i].x = 0;
+    game_info.current_tetromino.blocks[i].y = 10;
+  }
+  move_left(&game_info, -1);
+  for (int i = 0; i < 4; i++) {
+    ck_assert_int_eq(game_info.current_tetromino.blocks[i].x, 0);
+  }
+}
+END_TEST
+
+START_TEST(test_save_high_score)
+{
+  int score = 1500;
+  save_high_score(score);
+
+  FILE* file = fopen("highscore.txt", "r");
+  ck_assert_ptr_nonnull(file);
+
+  int saved_score;
+  fscanf(file, "%d", &saved_score);
+  ck_assert_int_eq(saved_score, score);
+
+  fclose(file);
+  remove("highscore.txt");
+}
+END_TEST
+
+START_TEST(test_calculate_score)
+{
+  ck_assert_int_eq(calculate_score(1), 100);
+  ck_assert_int_eq(calculate_score(2), 300);
+  ck_assert_int_eq(calculate_score(3), 700);
+  ck_assert_int_eq(calculate_score(4), 1500);
+  ck_assert_int_eq(calculate_score(0), 0);
+  ck_assert_int_eq(calculate_score(5), 0);
+}
+END_TEST
+
+START_TEST(test_update_score_increases_score_and_high_score)
+{
+  GameInfo_t game_info = {0};
+  game_info.score = 0;
+  game_info.high_score = 100;
+
+  update_score(&game_info, 2);
+
+  ck_assert_int_eq(game_info.score, 300);
+  ck_assert_int_eq(game_info.high_score, 300);
+}
+END_TEST
+
+START_TEST(test_clear_full_lines_clears_one_line)
+{
+  GameInfo_t game_info = {0};
+  for (int i = 0; i < FIELD_WIDTH; i++) {
+    game_info.field.cells[5][i] = 1;
+  }
+  int lines_cleared = clear_full_lines(&game_info);
+  ck_assert_int_eq(lines_cleared, 1);
+  for (int i = 0; i < FIELD_WIDTH; i++) {
+    ck_assert_int_eq(game_info.field.cells[5][i], 0);
+  }
+}
+END_TEST
+
+START_TEST(test_handle_full_lines_updates_score)
+{
+  GameInfo_t game_info = {0};
+  for (int i = 0; i < FIELD_WIDTH; i++) {
+    game_info.field.cells[10][i] = 1;
+  }
+  handle_full_lines(&game_info);
+  ck_assert_int_gt(game_info.score, 0);
+}
+END_TEST
+START_TEST(test_update_level_increase)
+{
+  GameInfo_t game_info = {0};
+  game_info.score = 600;
+  update_level(&game_info);
+  ck_assert_int_eq(game_info.level, 1);
+}
+END_TEST
+
+START_TEST(test_update_level_limits_to_max)
+{
+  GameInfo_t game_info = {0};
+  game_info.score = 10000;
+  update_level(&game_info);
+  ck_assert_int_eq(game_info.level, 9);
+}
+END_TEST
+
+START_TEST(test_update_speed_basic)
+{
+  GameInfo_t game_info = {0};
+  game_info.level = 0;
+  update_speed(&game_info);
+  ck_assert_int_eq(game_info.speed, 500000);
+}
+END_TEST
+
+START_TEST(test_update_speed_after_levelup)
+{
+  GameInfo_t game_info = {0};
+  game_info.level = 5;
+  update_speed(&game_info);
+  ck_assert_int_eq(game_info.speed, 400000);
+}
+END_TEST
+
+START_TEST(test_update_speed_limits_to_max_speed)
+{
+  GameInfo_t game_info = {0};
+  game_info.level = 9;
+  update_speed(&game_info);
+  ck_assert_int_eq(game_info.speed, 320000);
+}
+END_TEST
+
 Suite* backend_suite(void)
 {
   Suite* s = suite_create("Backend");
@@ -216,11 +412,29 @@ Suite* backend_suite(void)
   tcase_add_test(tc_core, test_is_collision_below);
   tcase_add_test(tc_core, test_stick_to_bottom);
   tcase_add_test(tc_core, test_clear_full_lines);
-  tcase_add_test(tc_core, test_generate_rand_tetromino);
   tcase_add_test(tc_core, test_check_game_over);
   tcase_add_test(tc_core, test_reset_game);
   tcase_add_test(tc_core, test_rotate_tetromino);
   tcase_add_test(tc_core, test_rotate_tetromino_with_collision);
+  tcase_add_test(tc_core, test_is_collision_on_sides_no_collision);
+  tcase_add_test(tc_core, test_is_collision_on_sides_border_collision);
+  tcase_add_test(tc_core, test_is_collision_on_sides_cell_occupied);
+  tcase_add_test(tc_core, test_move_right_success);
+  tcase_add_test(tc_core, test_move_right_blocked);
+  tcase_add_test(tc_core, test_move_left_success);
+  tcase_add_test(tc_core, test_move_left_blocked);
+  tcase_add_test(tc_core, test_save_high_score);
+  tcase_add_test(tc_core, test_calculate_score);
+  tcase_add_test(tc_core, test_update_score_increases_score_and_high_score);
+  tcase_add_test(tc_core, test_update_level_limits_to_max);
+  tcase_add_test(tc_core, test_update_speed_limits_to_max_speed);
+  tcase_add_test(tc_core, test_clear_full_lines_clears_one_line);
+  tcase_add_test(tc_core, test_handle_full_lines_updates_score);
+  tcase_add_test(tc_core, test_update_level_increase);
+  tcase_add_test(tc_core, test_update_level_limits_to_max);
+  tcase_add_test(tc_core, test_update_speed_basic);
+  tcase_add_test(tc_core, test_update_speed_after_levelup);
+  tcase_add_test(tc_core, test_update_speed_limits_to_max_speed);
   suite_add_tcase(s, tc_core);
 
   return s;

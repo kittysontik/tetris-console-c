@@ -29,8 +29,8 @@
 #define GAME_OVER_Y (FIELD_HEIGHT / 2)
 
 #define MIN_SPEED 500000        // 0.5 секунды в микросекундах
-#define LEVEL_SPEED_STEP 10000  // увеличение скорости на каждом уровене
-#define MAX_SPEED 100000
+#define LEVEL_SPEED_STEP 20000  // увеличение скорости на каждом уровне
+#define MAX_SPEED 200000
 #define SCORE_STEP 600
 #define SHIFT_DELAY 3 * 100000  // задержка в 0.3 секунды в микросекундах
 

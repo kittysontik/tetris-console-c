@@ -1,55 +1,55 @@
 OUT_DIR = out
-
 TESTS_DIR = tests
 
 CC = gcc
 CFLAGS = -std=c11 -Wall -Werror -Wextra -Wpedantic -Wno-gnu-zero-variadic-macro-arguments
-
 LIBS = -lncurses
 CHECK_LIBS = $(shell pkg-config --libs --cflags check)
 COVERAGE_FLAGS = -fprofile-arcs -ftest-coverage
 
 OBJS = $(OUT_DIR)/backend.o $(OUT_DIR)/tetris.o $(OUT_DIR)/frontend.o
-
 TEST_OBJS = $(OUT_DIR)/test_backend.o $(OUT_DIR)/test_main.o
 
 all: tetris
 
 tetris: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -o $@ $^ $(LIBS)
 	./tetris
 
 $(OUT_DIR)/backend.o: brick_game/tetris/backend.c
 	@mkdir -p $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -c $< -o $@
 
 $(OUT_DIR)/tetris.o: brick_game/tetris/tetris.c
 	@mkdir -p $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -c $< -o $@
 
 $(OUT_DIR)/frontend.o: gui/cli/frontend.c
 	@mkdir -p $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-
-test: $(TEST_OBJS) $(OUT_DIR)/backend.o $(OUT_DIR)/frontend.o
-	$(CC) $(CFLAGS) -o test_runner $^ $(CHECK_LIBS) $(LIBS)
-	./test_runner
+	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -c $< -o $@
 
 $(OUT_DIR)/%.o: $(TESTS_DIR)/%.c
 	@mkdir -p $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -c $< -o $@
 
-coverage_build: CFLAGS += $(COVERAGE_FLAGS)
+test: $(TEST_OBJS) $(OUT_DIR)/backend.o $(OUT_DIR)/frontend.o
+	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -o test_runner $^ $(CHECK_LIBS) $(LIBS)
+	./test_runner
+
+
+coverage_build: export CFLAGS := $(CFLAGS) $(COVERAGE_FLAGS)
 coverage_build: clean
 	$(MAKE) test
 
+
 gcov_report: coverage_build
-	gcov -o out brick_game/tetris/backend.c
+	@mkdir -p coverage
+	gcovr -r . --html --html-details -o coverage/index.html --exclude $(TESTS_DIR) --exclude gui/cli/
+	open coverage/index.html
 
 
 clean:
-	rm -rf $(OUT_DIR) tetris test_runner
+	rm -rf $(OUT_DIR) tetris test_runner *.gcda *.gcno *.gcov coverage
 
 
 CLANG-FORMAT = clang-format
@@ -60,5 +60,4 @@ check_style:
 format:
 	find . -name "*.c" -or -name "*.h" | xargs $(CLANG-FORMAT) -i
 
-.PHONY: all test clean tetris
-
+.PHONY: all tetris test clean coverage_build gcov_report check_style format
