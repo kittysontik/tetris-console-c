@@ -115,7 +115,7 @@ void render_all(GameWindows* game_windows, GameInfo_t* game_info)
   draw_next_win(game_windows);
   draw_score_win(game_windows, game_info->score);
   draw_highscore_win(game_windows, game_info->high_score);
-  draw_level_win(game_windows, game_info->level);
+  draw_level_win(game_windows, game_info->level + 1);
   draw_field(game_info, game_windows);
   draw_tetromino(&game_info->current_tetromino, game_windows->game_win);
   draw_next_tetromino(&game_info->next_tetromino, game_windows->next_win);

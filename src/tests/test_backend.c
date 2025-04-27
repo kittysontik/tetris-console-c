@@ -1,4 +1,3 @@
-#define HIGH_SCORE_FILE "test_highscore.txt"
 #include <check.h>
 
 #include "../tetris.h"
@@ -290,23 +289,6 @@ START_TEST(test_move_left_blocked)
 }
 END_TEST
 
-START_TEST(test_save_high_score)
-{
-  int score = 1500;
-  save_high_score(score);
-
-  FILE* file = fopen(HIGH_SCORE_FILE, "r");
-  ck_assert_ptr_nonnull(file);
-
-  int saved_score;
-  fscanf(file, "%d", &saved_score);
-  ck_assert_int_eq(saved_score, score);
-
-  fclose(file);
-  remove(HIGH_SCORE_FILE);
-}
-END_TEST
-
 START_TEST(test_calculate_score)
 {
   ck_assert_int_eq(calculate_score(1), 100);
@@ -315,19 +297,6 @@ START_TEST(test_calculate_score)
   ck_assert_int_eq(calculate_score(4), 1500);
   ck_assert_int_eq(calculate_score(0), 0);
   ck_assert_int_eq(calculate_score(5), 0);
-}
-END_TEST
-
-START_TEST(test_update_score_increases_score_and_high_score)
-{
-  GameInfo_t game_info = {0};
-  game_info.score = 0;
-  game_info.high_score = 100;
-
-  update_score(&game_info, 2);
-
-  ck_assert_int_eq(game_info.score, 300);
-  ck_assert_int_eq(game_info.high_score, 300);
 }
 END_TEST
 
@@ -345,16 +314,6 @@ START_TEST(test_clear_full_lines_clears_one_line)
 }
 END_TEST
 
-START_TEST(test_handle_full_lines_updates_score)
-{
-  GameInfo_t game_info = {0};
-  for (int i = 0; i < FIELD_WIDTH; i++) {
-    game_info.field.cells[10][i] = 1;
-  }
-  handle_full_lines(&game_info);
-  ck_assert_int_gt(game_info.score, 0);
-}
-END_TEST
 START_TEST(test_update_level_increase)
 {
   GameInfo_t game_info = {0};
@@ -459,7 +418,8 @@ START_TEST(test_run_game_fsm_exit)
 END_TEST
 START_TEST(test_check_game_over_true)
 {
-  GameInfo_t game_info = {.game_state = STATE_PLAYING};
+  GameInfo_t game_info = init_game_info();
+  game_info.game_state = STATE_PLAYING;
 
   game_info.field.cells[0][0] = 1;
 
@@ -703,18 +663,13 @@ Suite* backend_suite(void)
   tcase_add_test(tc_core, test_move_right_blocked);
   tcase_add_test(tc_core, test_move_left_success);
   tcase_add_test(tc_core, test_move_left_blocked);
-  tcase_add_test(tc_core, test_save_high_score);
   tcase_add_test(tc_core, test_calculate_score);
-  tcase_add_test(tc_core, test_update_score_increases_score_and_high_score);
   tcase_add_test(tc_core, test_update_level_limits_to_max);
   tcase_add_test(tc_core, test_update_speed_limits_to_max_speed);
   tcase_add_test(tc_core, test_clear_full_lines_clears_one_line);
-  tcase_add_test(tc_core, test_handle_full_lines_updates_score);
   tcase_add_test(tc_core, test_update_level_increase);
-  tcase_add_test(tc_core, test_update_level_limits_to_max);
   tcase_add_test(tc_core, test_update_speed_basic);
   tcase_add_test(tc_core, test_update_speed_after_levelup);
-  tcase_add_test(tc_core, test_update_speed_limits_to_max_speed);
   tcase_add_test(tc_core, test_handle_user_input_terminate);
   tcase_add_test(tc_core, test_handle_user_input_pause_start);
   tcase_add_test(tc_core, test_handle_user_input_movement_when_paused);

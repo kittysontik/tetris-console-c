@@ -34,7 +34,7 @@ $(OUT_DIR)/%.o: $(TESTS_DIR)/%.c
 	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -c $< -o $@
 
 test: $(TEST_OBJS) $(OUT_DIR)/backend.o $(OUT_DIR)/frontend.o
-	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -D HIGH_SCORE_FILE=\"test_highscore.txt\" -o test_runner $^ $(CHECK_LIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -o test_runner $^ $(CHECK_LIBS) $(LIBS)
 	./test_runner
 
 coverage_build: export CFLAGS := $(CFLAGS) $(COVERAGE_FLAGS)
