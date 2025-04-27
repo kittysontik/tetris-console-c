@@ -1,6 +1,6 @@
 OUT_DIR = out
 TESTS_DIR = tests
-INSTALL_DIR = /usr/local/bin
+INSTALL_DIR ?= $(HOME)/mybin
 
 CC = gcc
 CFLAGS = -std=c11 -Wall -Werror -Wextra -Wpedantic -Wno-gnu-zero-variadic-macro-arguments -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=500
@@ -71,4 +71,7 @@ check_style:
 format:
 	find . -name "*.c" -or -name "*.h" | xargs $(CLANG-FORMAT) -i
 
-.PHONY: all tetris test clean coverage_build gcov_report check_style format install uninstall dist
+valgrind: tetris
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./tetris
+
+.PHONY: all tetris test clean coverage_build gcov_report check_style format install uninstall dist valgrind
