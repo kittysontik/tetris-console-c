@@ -61,7 +61,12 @@ typedef struct Tetromino {
   TetrominoType type;
 } Tetromino;
 
-typedef enum GameState { STATE_MENU, STATE_PLAYING, STATE_GAME_OVER, STATE_EXIT } GameState;
+typedef enum GameState {
+  STATE_MENU,
+  STATE_PLAYING,
+  STATE_GAME_OVER,
+  STATE_EXIT
+} GameState;
 
 typedef struct GameInfo_t {
   GameField field;

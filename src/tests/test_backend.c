@@ -1,3 +1,4 @@
+#define HIGH_SCORE_FILE "test_highscore.txt"
 #include <check.h>
 
 #include "../tetris.h"
@@ -294,7 +295,7 @@ START_TEST(test_save_high_score)
   int score = 1500;
   save_high_score(score);
 
-  FILE* file = fopen("highscore.txt", "r");
+  FILE* file = fopen(HIGH_SCORE_FILE, "r");
   ck_assert_ptr_nonnull(file);
 
   int saved_score;
@@ -302,7 +303,7 @@ START_TEST(test_save_high_score)
   ck_assert_int_eq(saved_score, score);
 
   fclose(file);
-  remove("highscore.txt");
+  remove(HIGH_SCORE_FILE);
 }
 END_TEST
 

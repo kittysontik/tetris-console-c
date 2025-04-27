@@ -10,3 +10,4 @@ SortIncludes: false                          # Не трогать порядо�
 SpaceBeforeParens: ControlStatements         # Пробел перед скобками в if, while и т.д.
 CommentPragmas: Insert                       # Вставлять специальные pragma-комментарии при необходимости
 AllowShortFunctionsOnASingleLine: Empty      # Функции в одну строку только {}
+AllowShortEnumsOnASingleLine: false

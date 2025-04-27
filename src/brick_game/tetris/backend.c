@@ -1,3 +1,7 @@
+#ifndef HIGH_SCORE_FILE
+#define HIGH_SCORE_FILE "highscore.txt"
+#endif
+
 #include "../../tetris.h"
 
 int get_min_y_from_tetromino(const int shape[4][2])
@@ -57,7 +61,7 @@ GameField init_field(void)
 
 int load_high_score(void)
 {
-  FILE* file = fopen("highscore.txt", "r");
+  FILE* file = fopen(HIGH_SCORE_FILE, "r");
   int score = 0;
   if (file) {
     fscanf(file, "%d", &score);
@@ -272,7 +276,7 @@ int clear_full_lines(GameInfo_t* game_info)
 
 void save_high_score(int score)
 {
-  FILE* file = fopen("highscore.txt", "w");
+  FILE* file = fopen(HIGH_SCORE_FILE, "w");
   if (file) {
     fprintf(file, "%d", score);
     fclose(file);
