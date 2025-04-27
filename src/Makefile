@@ -3,8 +3,8 @@ TESTS_DIR = tests
 INSTALL_DIR = /usr/local/bin
 
 CC = gcc
-CFLAGS = -std=c11 -Wall -Werror -Wextra -Wpedantic -Wno-gnu-zero-variadic-macro-arguments
-LIBS = -lncurses
+CFLAGS = -std=c11 -Wall -Werror -Wextra -Wpedantic -Wno-gnu-zero-variadic-macro-arguments -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=500
+LIBS = -lncurses 
 CHECK_LIBS = $(shell pkg-config --libs --cflags check)
 COVERAGE_FLAGS = -fprofile-arcs -ftest-coverage
 

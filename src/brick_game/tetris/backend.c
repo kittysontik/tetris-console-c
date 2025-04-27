@@ -12,6 +12,14 @@ int get_min_y_from_tetromino(const int shape[4][2])
   return min_y;
 }
 
+void sleep_ms(long ms)
+{
+  struct timespec req;
+  req.tv_sec = ms / 1000;               // секунды
+  req.tv_nsec = (ms % 1000) * 1000000;  // наносекунды
+  nanosleep(&req, NULL);
+}
+
 Tetromino init_tetromino(void)
 {
   Tetromino t;
@@ -251,7 +259,7 @@ int clear_full_lines(GameInfo_t* game_info)
 {
   int cleared_lines = 0;
   // перед удалением полной строки делаем паузу
-  usleep(SHIFT_DELAY);
+  sleep_ms(SHIFT_DELAY_MS);
 
   for (int row = 0; row < FIELD_HEIGHT; row++) {
     if (is_full_row(&game_info->field, row)) {

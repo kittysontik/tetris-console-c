@@ -32,7 +32,7 @@
 #define LEVEL_SPEED_STEP 20000  // увеличение скорости на каждом уровне
 #define MAX_SPEED 200000
 #define SCORE_STEP 600
-#define SHIFT_DELAY 3 * 100000  // задержка в 0.3 секунды в микросекундах
+#define SHIFT_DELAY_MS 300  // задержка в 300 миллисекунд 0.3 сек
 
 #define BLOCK_SYMBOL "\u2592"
 #define EMPTY_SYMBOL "  "
